@@ -37,47 +37,52 @@ int main(int argc, char* argv[])
     // Draw rectangle
     float rectX = 350.f;
     float rectY = 250.f;
-
-    SDL_Surface* surface = IMG_Load("assets/knight.png");
+    
+    
+    SDL_Surface* surface = IMG_Load("assets/knight1.png");
 
     if (!surface)
     {
         cout << "Image failed: " << SDL_GetError() << endl;
         return -1;
     }
-
     SDL_Texture* knightTexture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_DestroySurface(surface);
+    const bool* keys = SDL_GetKeyboardState(NULL);
+
     while (gameLoop)
     {
-        IMG_Load("assets/knight.png");
         while (SDL_PollEvent(&event))
         {
             if (event.type == SDL_EVENT_QUIT)
             {
                 gameLoop = false;
             }
+        }
 
-            if (event.type == SDL_EVENT_KEY_DOWN)
-            {
-                if (event.key.key == SDLK_D)
-                {
-                    rectX += 15.f;
-                }
-                else if (event.key.key == SDLK_A)
-                {
-                    rectX -= 15.f;
-                }
-            }
+        float speed = 1.5f;
 
+        if (keys[SDL_SCANCODE_D])
+        {
+            rectX += speed;
+        }
+
+        if (keys[SDL_SCANCODE_A])
+        {
+            rectX -= speed;
         }
 
         // Clear screen
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0,0);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0,255);
         SDL_RenderClear(renderer);
 
-        
-        SDL_FRect rect = { rectX, rectY, 100.0f, 100.0f };
+        float width;
+        float height;
+
+        SDL_GetTextureSize(knightTexture, &width, &height);
+        float scale = 4.0f;
+
+        SDL_FRect rect = { rectX, rectY, 100.0f * scale, 100.0f * scale * 1.5};
        // SDL_SetRenderDrawColor(renderer, 0, 255, 0, 0);
        // SDL_RenderFillRect(renderer, &rect);
         
