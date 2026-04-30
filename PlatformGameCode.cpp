@@ -33,6 +33,10 @@ int main(int argc, char* argv[])
     bool gameLoop = true;
     SDL_Event event;
 
+    // Draw rectangle
+    float rectX = 350.f;
+    float rectY = 250.f;
+
     while (gameLoop)
     {
         while (SDL_PollEvent(&event))
@@ -41,18 +45,32 @@ int main(int argc, char* argv[])
             {
                 gameLoop = false;
             }
+
+            if (event.type == SDL_EVENT_KEY_DOWN)
+            {
+                if (event.key.key == SDLK_D)
+                {
+                    rectX += 15.f;
+                }
+                else if (event.key.key == SDLK_A)
+                {
+                    rectX -= 15.f;
+                }
+            }
+
         }
 
         // Clear screen
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0,0);
         SDL_RenderClear(renderer);
 
-        // Draw rectangle
-        SDL_FRect rect = { 350.0f, 250.0f, 100.0f, 100.0f };
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        
+        SDL_FRect rect = { rectX, rectY, 100.0f, 100.0f };
+        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 0);
         SDL_RenderFillRect(renderer, &rect);
-
         SDL_RenderPresent(renderer);
+    
+       
     }
 
     SDL_DestroyRenderer(renderer);
