@@ -89,8 +89,10 @@ int main(int argc, char* argv[])
     // player position
     float xPosition = 350.f;
     float yPosition = 5.f;
+    float yVelocity = 0.f;
+    float gravity = 0.002f;
+    float jumpStrength = -0.9f;
 
-    float gravity = 0.2f;
 
     int playerHeight = 120;
     int currentFrame = 0;
@@ -105,11 +107,22 @@ int main(int argc, char* argv[])
     bool bottomReached = false;
     while (gameLoop)
     {
+        yPosition += yVelocity;
+        yVelocity += gravity;
+
         while (SDL_PollEvent(&event))
         {
             if (event.type == SDL_EVENT_QUIT)
             {
                 gameLoop = false;
+            }
+            if (event.type == SDL_EVENT_KEY_DOWN)
+            {
+                if (event.key.scancode == SDL_SCANCODE_SPACE && bottomReached == true)
+                {
+                    yVelocity = jumpStrength;
+                    bottomReached = false;
+                }
             }
         }
 
@@ -131,6 +144,8 @@ int main(int argc, char* argv[])
             moving = true;
         }
 
+        
+        
         if (moving)
         {
             Uint64 currentTime = SDL_GetTicks();
@@ -150,14 +165,19 @@ int main(int argc, char* argv[])
         yPosition += gravity; //makes the player fall
         if (bottomReached == false)
         {
-            gravity += 0.002f; //increases its value so that it accelerates down and doesnt fall at a constant speed
+            yVelocity += gravity; //meaning every frame gravity is stronger as the yvelocity adds more gravity onto it EVERY frame, e.g. frame 1 its 0.2 then frame 2 its 0.4 etc
+            yPosition += yVelocity;
         }
         if (yPosition + playerHeight >= 1000)
         {
-            gravity = 0.f;
+            yPosition = 1000 - playerHeight;
+            yVelocity = 0.0f;
             bottomReached = true;
         }
-
+        else
+        {
+            bottomReached = false;
+        }
 
 
 
