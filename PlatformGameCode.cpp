@@ -32,14 +32,6 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    bool gameLoop = true;
-    SDL_Event event;
-
-    // player position
-    float rectX = 350.f;
-    float rectY = 250.f;
-    
-   
     SDL_Surface* surface = IMG_Load("assets/knightSprite1.png");
     
     if (!surface)
@@ -52,7 +44,8 @@ int main(int argc, char* argv[])
     SDL_Texture* knightTexture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_SetTextureScaleMode(knightTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
     SDL_DestroySurface(surface);
-    const bool* keys = SDL_GetKeyboardState(NULL);
+
+    const bool* keys = SDL_GetKeyboardState(NULL); 
 
 
     //sprite animation for going forward
@@ -89,17 +82,27 @@ int main(int argc, char* argv[])
         SDL_SetTextureScaleMode(runFramesBackwards[i], SDL_SCALEMODE_NEAREST);
 
         SDL_DestroySurface(tempSurface);
-
-        
-        
+ 
     }
 
+
+    // player position
+    float xPosition = 350.f;
+    float yPosition = 5.f;
+
+    float gravity = 0.2f;
+
+    int playerHeight = 120;
     int currentFrame = 0;
+
     Uint64 lastFrameTime = SDL_GetTicks();
     int frameDelay = 100; // milliseconds
 
     bool facingRight = true;
+    bool gameLoop = true;
+    SDL_Event event;
 
+    bool bottomReached = false;
     while (gameLoop)
     {
         while (SDL_PollEvent(&event))
@@ -116,14 +119,14 @@ int main(int argc, char* argv[])
 
         if (keys[SDL_SCANCODE_D])
         {
-            rectX += speed;
+            xPosition += speed;
             facingRight = true;
             moving = true;
         }
 
         if (keys[SDL_SCANCODE_A])
         {
-            rectX -= speed;
+            xPosition -= speed;
             facingRight = false;
             moving = true;
         }
@@ -132,7 +135,7 @@ int main(int argc, char* argv[])
         {
             Uint64 currentTime = SDL_GetTicks();
 
-            if (currentTime - lastFrameTime >= frameDelay)
+            if (currentTime - lastFrameTime >= frameDelay) //if the time between last time check and current time check is more than 100 milliseconds then change the frame of the sprite
             {
                 currentFrame = (currentFrame + 1) % 8;
                 lastFrameTime = currentTime;
@@ -143,7 +146,23 @@ int main(int argc, char* argv[])
             currentFrame = 1;
         }
 
+
+        yPosition += gravity; //makes the player fall
+        if (bottomReached == false)
+        {
+            gravity += 0.002f; //increases its value so that it accelerates down and doesnt fall at a constant speed
+        }
+        if (yPosition + playerHeight >= 1000)
+        {
+            gravity = 0.f;
+            bottomReached = true;
+        }
+
+
+
+
         // Clear screen
+      
         SDL_SetRenderDrawColor(renderer, 0, 0, 0,255);
         SDL_RenderClear(renderer);
 
@@ -153,7 +172,7 @@ int main(int argc, char* argv[])
         SDL_GetTextureSize(knightTexture, &width, &height);
         float scaleHeight = 1.2f; //just to stretch the image out vertically a bit
 
-        SDL_FRect rect = { rectX, rectY, 100.0f, 100.0f * scaleHeight};
+        SDL_FRect rect = { xPosition, yPosition, 100.0f, 100.0f * scaleHeight};
       
         if (facingRight)
         {
