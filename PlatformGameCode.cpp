@@ -32,18 +32,31 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    SDL_Surface* surface = IMG_Load("assets/knightSprite1.png");
-    
-    if (!surface)
+    SDL_Surface* surfaceKnight = IMG_Load("assets/knightSprite1.png");
+    SDL_Surface* surfacePlatform = IMG_Load("assets/platform.png");
+
+    if (!surfaceKnight)
+    {
+        cout << "Image failed: " << SDL_GetError() << endl;
+        return -1;
+    }
+
+    if (!surfacePlatform)
     {
         cout << "Image failed: " << SDL_GetError() << endl;
         return -1;
     }
 
     
-    SDL_Texture* knightTexture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_Texture* knightTexture = SDL_CreateTextureFromSurface(renderer, surfaceKnight);
     SDL_SetTextureScaleMode(knightTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
-    SDL_DestroySurface(surface);
+    SDL_DestroySurface(surfaceKnight);
+
+
+    SDL_Texture* platformTexture = SDL_CreateTextureFromSurface(renderer, surfacePlatform);
+    SDL_SetTextureScaleMode(platformTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
+    SDL_DestroySurface(surfacePlatform);
+
 
     const bool* keys = SDL_GetKeyboardState(NULL); 
 
@@ -89,13 +102,21 @@ int main(int argc, char* argv[])
     // player position
     float xPosition = 350.f;
     float yPosition = 5.f;
+
+    float platform1XPosition = 450.f;
+    float platform1YPosition = 900.f;
+
     float yVelocity = 0.f;
-    float gravity = 0.002f;
-    float jumpStrength = -0.9f;
+    float gravity = 0.003f;
+    float jumpStrength = -0.90f;
 
 
     int playerHeight = 120;
+    int playerWidth = 100;
     int currentFrame = 0;
+
+
+
 
     Uint64 lastFrameTime = SDL_GetTicks();
     int frameDelay = 100; // milliseconds
@@ -107,8 +128,14 @@ int main(int argc, char* argv[])
     bool bottomReached = false;
     while (gameLoop)
     {
-        yPosition += yVelocity;
-        yVelocity += gravity;
+
+        float playerLeft = xPosition;
+        float playerRight = xPosition + playerWidth;
+        float playerBottom = yPosition + playerHeight;
+
+        float platformLeft = platform1XPosition;
+        float platformRight = platform1XPosition + 100;
+        float platformTop = platform1YPosition;
 
         while (SDL_PollEvent(&event))
         {
@@ -161,14 +188,36 @@ int main(int argc, char* argv[])
             currentFrame = 1;
         }
 
-
-        yPosition += gravity; //makes the player fall
+        //gravity
+        
         if (bottomReached == false)
         {
             yVelocity += gravity; //meaning every frame gravity is stronger as the yvelocity adds more gravity onto it EVERY frame, e.g. frame 1 its 0.2 then frame 2 its 0.4 etc
             yPosition += yVelocity;
         }
-        if (yPosition + playerHeight >= 1000)
+        if (yPosition + playerHeight >= 1000  )
+        {
+            yPosition = 1000 - playerHeight;
+            yVelocity = 0.0f;
+            bottomReached = true;
+        }
+        else
+        {
+            bottomReached = false;
+        }
+
+        //collision
+        if (playerBottom >= platformTop &&
+            playerBottom <= platformTop + 20 &&
+            playerRight > platformLeft &&
+            playerLeft < platformRight &&
+            yVelocity >= 0)
+        {
+            yPosition = platformTop - playerHeight;
+            yVelocity = 0.0f;
+            bottomReached = true;
+        }
+        else if (yPosition + playerHeight >= 1000)
         {
             yPosition = 1000 - playerHeight;
             yVelocity = 0.0f;
@@ -180,7 +229,6 @@ int main(int argc, char* argv[])
         }
 
 
-
         // Clear screen
       
         SDL_SetRenderDrawColor(renderer, 0, 0, 0,255);
@@ -189,24 +237,30 @@ int main(int argc, char* argv[])
         float width;
         float height;
 
+        //knight
         SDL_GetTextureSize(knightTexture, &width, &height);
         float scaleHeight = 1.2f; //just to stretch the image out vertically a bit
+        SDL_FRect rectKnight = { xPosition, yPosition, 100.0f, 100.0f * scaleHeight};
+        
+        //platform
+        SDL_GetTextureSize(platformTexture, &width, &height);
+        SDL_FRect rectPlatform = { platform1XPosition, platform1YPosition, 100.0f, 50.0f };        
+        SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatform);
 
-        SDL_FRect rect = { xPosition, yPosition, 100.0f, 100.0f * scaleHeight};
-      
+
         if (facingRight)
         {
-            SDL_RenderTexture(renderer, runFramesForwards[currentFrame], NULL, &rect);
+            SDL_RenderTexture(renderer, runFramesForwards[currentFrame], NULL, &rectKnight);
         }
         else
         {
-            SDL_RenderTexture(renderer, runFramesBackwards[currentFrame], NULL, &rect);
+            SDL_RenderTexture(renderer, runFramesBackwards[currentFrame], NULL, &rectKnight);
         }
 
         SDL_RenderPresent(renderer);
 
     }
-
+    SDL_DestroyTexture(platformTexture);
     for (int i = 0; i < 8; i++)
     {
         SDL_DestroyTexture(runFramesForwards[i]);
