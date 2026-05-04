@@ -6,7 +6,7 @@
 using namespace std;
 
 
-bool collision(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& platform1XPosition, float& platform1YPosition, float& yVelocity, bool& bottomReached, float screenWidth, float screenHeight, float platformWidth, float platformHeight)
+bool collision(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& platform1XPosition, float& platform1YPosition, float& yVelocity, bool& bottomReached, float screenWidth, float screenHeight, float platformWidth, float platformHeight, float xVelocity)
 {
 
     float playerLeft = xPosition;
@@ -41,7 +41,28 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
         bottomReached = true;
         return bottomReached;
     }
-    
+    else if (xVelocity > 0 && playerRight > platformLeft && 
+             playerLeft < platformLeft && 
+             playerTop < platformTop &&
+             playerBottom > platformBottom
+             )
+    {
+        xPosition = platformLeft - playerWidth;
+        xVelocity = 0;
+        bottomReached = true;
+        return bottomReached;
+    }
+    else if (xVelocity > 0 && playerLeft < platformRight &&
+        playerRight > platformRight && 
+        playerTop < platformTop &&
+        playerBottom > platformBottom
+        )
+    {
+        xPosition = platformRight;
+        xVelocity = 0;
+        bottomReached = true;
+        return bottomReached;
+    }
     else if (yPosition + playerHeight >= screenHeight)
     {
         yPosition = screenHeight - playerHeight;
@@ -69,6 +90,7 @@ int main(int argc, char* argv[])
     
     float screenWidth = 1500;
     float screenHeight = 800;
+
 
     // Create window (SDL3 version)
     SDL_Window* window = SDL_CreateWindow("Platformer", screenWidth, screenHeight, 0);
@@ -155,7 +177,7 @@ int main(int argc, char* argv[])
     }
 
 
-    // player position
+    // player spawn/position variable
     float xPosition = 350.f;
     float yPosition = 5.f;
 
@@ -187,7 +209,7 @@ int main(int argc, char* argv[])
     bool bottomReached = false;
     while (gameLoop)
     {
-
+      
 
         while (SDL_PollEvent(&event))
         {
@@ -260,7 +282,7 @@ int main(int argc, char* argv[])
 
 
         //collision check
-        collision(xPosition, yPosition, playerWidth, playerHeight, platform1XPosition, platform1YPosition, yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight);
+        collision(xPosition, yPosition, playerWidth, playerHeight, platform1XPosition, platform1YPosition, yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight, xVelocity);
         
           
         
