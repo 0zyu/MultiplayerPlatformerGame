@@ -2,6 +2,7 @@
 #include <iostream>
 #include <SDL3_image/SDL_image.h>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -41,7 +42,7 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
         bottomReached = true;
         return bottomReached;
     }
-    else if (xVelocity > 0 && playerRight > platformLeft && 
+    else if (xVelocity > 0 && playerRight > platformLeft &&
              playerLeft < platformLeft && 
              playerTop < platformTop &&
              playerBottom > platformBottom
@@ -143,8 +144,7 @@ int main(int argc, char* argv[])
     SDL_Texture* platformTexture = SDL_CreateTextureFromSurface(renderer, surfacePlatform);
     SDL_SetTextureScaleMode(platformTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
     SDL_DestroySurface(surfacePlatform);
-
-
+    
     const bool* keys = SDL_GetKeyboardState(NULL); 
 
 
@@ -190,9 +190,7 @@ int main(int argc, char* argv[])
     float xPosition = 350.f;
     float yPosition = 5.f;
 
-    float platform1XPosition = 550.f;
-    float platform1YPosition = 700.f;
-
+   
     float xVelocity = 0.f; //how fast the player moves in the X Direction
     float yVelocity = 0.f; //how fast its falling/moving in Y direction
     float gravity = 0.003f; //gravity strength and how much it pulls down
@@ -214,6 +212,11 @@ int main(int argc, char* argv[])
     bool facingRight = true;
     bool gameLoop = true;
     SDL_Event event;
+
+
+
+    vector<float> platformXPositions = { 550.f, 800.f , 1050.f ,1300.f ,1600.f ,300.f ,2000.f ,1800.f ,50.f ,1200.f };
+    vector<float> platformYPositions = { 650.f, 550.f , 450.f , 350.f,200.f,350.f , 550.f,250.f ,500.f , 700.f };
 
     bool bottomReached = false;
     while (gameLoop)
@@ -290,9 +293,17 @@ int main(int argc, char* argv[])
         }
 
 
-        //collision check
-        collision(xPosition, yPosition, playerWidth, playerHeight, platform1XPosition, platform1YPosition, yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight, xVelocity);
-        
+        bottomReached = false;
+        for (int i = 0; i < 10; i++)
+        {
+
+            if (collision(xPosition, yPosition, playerWidth, playerHeight, platformXPositions[i], platformYPositions[i], 
+                yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight, xVelocity)
+                )
+            {
+                break;
+            }
+        }
           
         
 
@@ -313,13 +324,14 @@ int main(int argc, char* argv[])
         float scaleHeight = 1.2f; //just to stretch the image out vertically a bit
         SDL_FRect rectKnight = { xPosition, yPosition, 100.0f, 100.0f * scaleHeight};
         
+     
         
-        //platform
-        SDL_GetTextureSize(platformTexture, &width, &height);
-        SDL_FRect rectPlatform = { platform1XPosition, platform1YPosition, platformWidth, platformHeight };        
-        SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatform);
-
-      
+        for (int i = 0; i < 10; i++)
+        {
+            SDL_GetTextureSize(platformTexture, &width, &height);
+            SDL_FRect rectPlatforms = { platformXPositions[i], platformYPositions[i], platformWidth, platformHeight};
+            SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatforms);
+        }
 
         if (facingRight)
         {
@@ -334,7 +346,12 @@ int main(int argc, char* argv[])
 
     }
    
-    SDL_DestroyTexture(platformTexture);
+    
+    for (int i = 0; i < 10; i++)
+    {
+        SDL_DestroyTexture(platformTexture);
+    }
+
     for (int i = 0; i < 8; i++)
     {
         SDL_DestroyTexture(runFramesForwards[i]);
@@ -343,7 +360,7 @@ int main(int argc, char* argv[])
     {
         SDL_DestroyTexture(runFramesBackwards[i]);
     }
-
+    SDL_DestroyTexture(platformTexture);
     SDL_DestroyTexture(backgroundTexture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
