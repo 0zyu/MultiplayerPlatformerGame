@@ -6,7 +6,7 @@
 using namespace std;
 
 
-bool collision(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& platform1XPosition, float& platform1YPosition, float& yVelocity, bool& bottomReached)
+bool collision(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& platform1XPosition, float& platform1YPosition, float& yVelocity, bool& bottomReached, float screenWidth, float screenHeight, float platformWidth, float platformHeight)
 {
 
     float playerLeft = xPosition;
@@ -15,9 +15,9 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
     float playerTop = yPosition;
 
     float platformLeft = platform1XPosition;
-    float platformRight = platform1XPosition + 100;
+    float platformRight = platform1XPosition + platformWidth;
     float platformTop = platform1YPosition;
-    float platformBottom = platform1YPosition + 50;
+    float platformBottom = platform1YPosition + platformHeight;
 
     if (playerBottom >= platformTop &&
         playerBottom <= platformTop + 20 && //+20 because it would fall through the platform without it, like a catching value
@@ -31,7 +31,7 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
         return bottomReached;
     }
     else if (playerTop <= platformBottom &&
-             playerTop >= platformBottom - 15 &&
+             playerTop >= platformBottom - 0.5 &&
              playerRight > platformLeft &&
              playerLeft < platformRight &&
              yVelocity <= 0)
@@ -41,9 +41,10 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
         bottomReached = true;
         return bottomReached;
     }
-    else if (yPosition + playerHeight >= 1000)
+    
+    else if (yPosition + playerHeight >= screenHeight)
     {
-        yPosition = 1000 - playerHeight;
+        yPosition = screenHeight - playerHeight;
         yVelocity = 0.0f;
         bottomReached = true;
         return bottomReached;
@@ -65,9 +66,12 @@ int main(int argc, char* argv[])
         cout << "SDL failed: " << SDL_GetError() << endl;
         return -1;
     }
-   
+    
+    float screenWidth = 1500;
+    float screenHeight = 800;
+
     // Create window (SDL3 version)
-    SDL_Window* window = SDL_CreateWindow("Platformer", 1200, 1000, 0);
+    SDL_Window* window = SDL_CreateWindow("Platformer", screenWidth, screenHeight, 0);
 
     if (!window)
     {
@@ -155,13 +159,16 @@ int main(int argc, char* argv[])
     float xPosition = 350.f;
     float yPosition = 5.f;
 
-    float platform1XPosition = 450.f;
-    float platform1YPosition = 800.f;
+    float platform1XPosition = 550.f;
+    float platform1YPosition = 700.f;
 
-    float yVelocity = 0.f; //how fast its falling/moving in y direction
+    float xVelocity = 0.f; //how fast the player moves in the X Direction
+    float yVelocity = 0.f; //how fast its falling/moving in Y direction
     float gravity = 0.003f; //gravity strength and how much it pulls down
     float jumpStrength = -0.90f; //how high the player will jump
 
+    float platformWidth = 200.f;
+    float platformHeight = 50.f;
 
     int playerHeight = 120;
     int playerWidth = 100;
@@ -198,20 +205,25 @@ int main(int argc, char* argv[])
             }
         }
 
-        float speed = 0.5f;
+        float speed = 0.7f;
 
         bool moving = false;
 
         if (keys[SDL_SCANCODE_D])
         {
-            xPosition += speed;
+
+            xVelocity = 0;
+            xVelocity += speed;
+            xPosition += xVelocity;
             facingRight = true;
             moving = true;
         }
 
         if (keys[SDL_SCANCODE_A])
         {
-            xPosition -= speed;
+            xVelocity = 0;
+            xVelocity += speed;
+            xPosition -= xVelocity;
             facingRight = false;
             moving = true;
         }
@@ -248,7 +260,7 @@ int main(int argc, char* argv[])
 
 
         //collision check
-        collision(xPosition, yPosition, playerWidth, playerHeight, platform1XPosition, platform1YPosition, yVelocity, bottomReached);
+        collision(xPosition, yPosition, playerWidth, playerHeight, platform1XPosition, platform1YPosition, yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight);
         
           
         
@@ -266,9 +278,10 @@ int main(int argc, char* argv[])
         float scaleHeight = 1.2f; //just to stretch the image out vertically a bit
         SDL_FRect rectKnight = { xPosition, yPosition, 100.0f, 100.0f * scaleHeight};
         
+        
         //platform
         SDL_GetTextureSize(platformTexture, &width, &height);
-        SDL_FRect rectPlatform = { platform1XPosition, platform1YPosition, 100.0f, 50.0f };        
+        SDL_FRect rectPlatform = { platform1XPosition, platform1YPosition, platformWidth, platformHeight };        
         SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatform);
 
 
