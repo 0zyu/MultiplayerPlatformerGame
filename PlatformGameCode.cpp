@@ -112,6 +112,7 @@ int main(int argc, char* argv[])
 
     SDL_Surface* surfaceKnight = IMG_Load("assets/knightSprite1.png");
     SDL_Surface* surfacePlatform = IMG_Load("assets/platform.png");
+    SDL_Surface* surfaceBackground = IMG_Load("assets/Clouds.png");
 
     if (!surfaceKnight)
     {
@@ -124,7 +125,15 @@ int main(int argc, char* argv[])
         cout << "Image failed: " << SDL_GetError() << endl;
         return -1;
     }
+    
+    if (!surfaceBackground)
+    {
+        cout << "Background failed: " << SDL_GetError() << endl;
+        return -1;
+    }
 
+    SDL_Texture* backgroundTexture = SDL_CreateTextureFromSurface(renderer, surfaceBackground);
+    SDL_DestroySurface(surfaceBackground);
     
     SDL_Texture* knightTexture = SDL_CreateTextureFromSurface(renderer, surfaceKnight);
     SDL_SetTextureScaleMode(knightTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
@@ -295,6 +304,10 @@ int main(int argc, char* argv[])
         float width;
         float height;
 
+        //background
+        SDL_FRect rectBackground = { 0, 0, screenWidth, screenHeight };
+        SDL_RenderTexture(renderer, backgroundTexture, NULL, &rectBackground);
+
         //knight
         SDL_GetTextureSize(knightTexture, &width, &height);
         float scaleHeight = 1.2f; //just to stretch the image out vertically a bit
@@ -306,6 +319,7 @@ int main(int argc, char* argv[])
         SDL_FRect rectPlatform = { platform1XPosition, platform1YPosition, platformWidth, platformHeight };        
         SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatform);
 
+      
 
         if (facingRight)
         {
@@ -319,6 +333,7 @@ int main(int argc, char* argv[])
         SDL_RenderPresent(renderer);
 
     }
+   
     SDL_DestroyTexture(platformTexture);
     for (int i = 0; i < 8; i++)
     {
@@ -329,6 +344,7 @@ int main(int argc, char* argv[])
         SDL_DestroyTexture(runFramesBackwards[i]);
     }
 
+    SDL_DestroyTexture(backgroundTexture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
