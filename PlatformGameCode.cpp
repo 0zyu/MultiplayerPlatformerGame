@@ -190,7 +190,9 @@ int main(int argc, char* argv[])
     float xPosition = 350.f;
     float yPosition = 5.f;
 
-   
+    float cameraX = 0.0f;
+    
+
     float xVelocity = 0.f; //how fast the player moves in the X Direction
     float yVelocity = 0.f; //how fast its falling/moving in Y direction
     float gravity = 0.003f; //gravity strength and how much it pulls down
@@ -305,6 +307,7 @@ int main(int argc, char* argv[])
             }
         }
           
+        cameraX = xPosition - screenWidth / 2 + playerWidth / 2;
         
 
         // Clear screen
@@ -322,14 +325,14 @@ int main(int argc, char* argv[])
         //knight
         SDL_GetTextureSize(knightTexture, &width, &height);
         float scaleHeight = 1.2f; //just to stretch the image out vertically a bit
-        SDL_FRect rectKnight = { xPosition, yPosition, 100.0f, 100.0f * scaleHeight};
+        SDL_FRect rectKnight = { xPosition - cameraX, yPosition, 100.0f, 100.0f * scaleHeight};
         
      
         
         for (int i = 0; i < 10; i++)
         {
             SDL_GetTextureSize(platformTexture, &width, &height);
-            SDL_FRect rectPlatforms = { platformXPositions[i], platformYPositions[i], platformWidth, platformHeight};
+            SDL_FRect rectPlatforms = { platformXPositions[i] - cameraX, platformYPositions[i], platformWidth, platformHeight};
             SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatforms);
         }
 
