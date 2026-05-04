@@ -5,6 +5,58 @@
 
 using namespace std;
 
+
+bool collision(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& platform1XPosition, float& platform1YPosition, float& yVelocity, bool& bottomReached)
+{
+
+    float playerLeft = xPosition;
+    float playerRight = xPosition + playerWidth;
+    float playerBottom = yPosition + playerHeight;
+    float playerTop = yPosition;
+
+    float platformLeft = platform1XPosition;
+    float platformRight = platform1XPosition + 100;
+    float platformTop = platform1YPosition;
+    float platformBottom = platform1YPosition + 50;
+
+    if (playerBottom >= platformTop &&
+        playerBottom <= platformTop + 20 && //+20 because it would fall through the platform without it, like a catching value
+        playerRight > platformLeft &&
+        playerLeft < platformRight &&
+        yVelocity >= 0)
+    {
+        yPosition = platformTop - playerHeight;
+        yVelocity = 0.0f;
+        bottomReached = true;
+        return bottomReached;
+    }
+    else if (playerTop <= platformBottom &&
+             playerTop >= platformBottom - 15 &&
+             playerRight > platformLeft &&
+             playerLeft < platformRight &&
+             yVelocity <= 0)
+    {
+        yPosition = platformBottom + playerHeight;
+        yVelocity = 0.0f;
+        bottomReached = true;
+        return bottomReached;
+    }
+    else if (yPosition + playerHeight >= 1000)
+    {
+        yPosition = 1000 - playerHeight;
+        yVelocity = 0.0f;
+        bottomReached = true;
+        return bottomReached;
+    }
+    else
+    {
+        bottomReached = false;
+        return bottomReached;
+    }
+}
+
+
+
 int main(int argc, char* argv[])
 {
     // Init SDL
@@ -104,11 +156,11 @@ int main(int argc, char* argv[])
     float yPosition = 5.f;
 
     float platform1XPosition = 450.f;
-    float platform1YPosition = 900.f;
+    float platform1YPosition = 800.f;
 
-    float yVelocity = 0.f;
-    float gravity = 0.003f;
-    float jumpStrength = -0.90f;
+    float yVelocity = 0.f; //how fast its falling/moving in y direction
+    float gravity = 0.003f; //gravity strength and how much it pulls down
+    float jumpStrength = -0.90f; //how high the player will jump
 
 
     int playerHeight = 120;
@@ -129,13 +181,6 @@ int main(int argc, char* argv[])
     while (gameLoop)
     {
 
-        float playerLeft = xPosition;
-        float playerRight = xPosition + playerWidth;
-        float playerBottom = yPosition + playerHeight;
-
-        float platformLeft = platform1XPosition;
-        float platformRight = platform1XPosition + 100;
-        float platformTop = platform1YPosition;
 
         while (SDL_PollEvent(&event))
         {
@@ -147,7 +192,7 @@ int main(int argc, char* argv[])
             {
                 if (event.key.scancode == SDL_SCANCODE_SPACE && bottomReached == true)
                 {
-                    yVelocity = jumpStrength;
+                    yVelocity = jumpStrength; //set to how high it will go in the air
                     bottomReached = false;
                 }
             }
@@ -195,43 +240,22 @@ int main(int argc, char* argv[])
             yVelocity += gravity; //meaning every frame gravity is stronger as the yvelocity adds more gravity onto it EVERY frame, e.g. frame 1 its 0.2 then frame 2 its 0.4 etc
             yPosition += yVelocity;
         }
-        if (yPosition + playerHeight >= 1000  )
-        {
-            yPosition = 1000 - playerHeight;
-            yVelocity = 0.0f;
-            bottomReached = true;
-        }
+        
         else
         {
             bottomReached = false;
         }
 
-        //collision
-        if (playerBottom >= platformTop &&
-            playerBottom <= platformTop + 20 &&
-            playerRight > platformLeft &&
-            playerLeft < platformRight &&
-            yVelocity >= 0)
-        {
-            yPosition = platformTop - playerHeight;
-            yVelocity = 0.0f;
-            bottomReached = true;
-        }
-        else if (yPosition + playerHeight >= 1000)
-        {
-            yPosition = 1000 - playerHeight;
-            yVelocity = 0.0f;
-            bottomReached = true;
-        }
-        else
-        {
-            bottomReached = false;
-        }
 
+        //collision check
+        collision(xPosition, yPosition, playerWidth, playerHeight, platform1XPosition, platform1YPosition, yVelocity, bottomReached);
+        
+          
+        
 
         // Clear screen
       
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0,255);
+        SDL_SetRenderDrawColor(renderer, 255,255,255,255);
         SDL_RenderClear(renderer);
 
         float width;
