@@ -64,9 +64,9 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
         bottomReached = true;
         return bottomReached;
     }
-    else if (yPosition + playerHeight >= screenHeight)
+    else if (yPosition + playerHeight >= 750.f)
     {
-        yPosition = screenHeight - playerHeight;
+        yPosition = 750.f - playerHeight;
         yVelocity = 0.0f;
         bottomReached = true;
         return bottomReached;
@@ -114,23 +114,29 @@ int main(int argc, char* argv[])
     SDL_Surface* surfaceKnight = IMG_Load("assets/knightSprite1.png");
     SDL_Surface* surfacePlatform = IMG_Load("assets/platform.png");
     SDL_Surface* surfaceBackground = IMG_Load("assets/Clouds.png");
-    SDL_Surface* surfaceCloudBackground = IMG_Load("assets/cloudAlone.png");
+    SDL_Surface* surfaceGround = IMG_Load("assets/ground.png");
 
     if (!surfaceKnight)
     {
-        cout << "Image failed: " << SDL_GetError() << endl;
+        cout << "Knight image failed: " << SDL_GetError() << endl;
         return -1;
     }
 
     if (!surfacePlatform)
     {
-        cout << "Image failed: " << SDL_GetError() << endl;
+        cout << "Platform image failed: " << SDL_GetError() << endl;
         return -1;
     }
     
     if (!surfaceBackground)
     {
-        cout << "Background failed: " << SDL_GetError() << endl;
+        cout << "Background image failed: " << SDL_GetError() << endl;
+        return -1;
+    }
+
+    if (!surfaceGround)
+    {
+        cout << "Ground image failed: " << SDL_GetError() << endl;
         return -1;
     }
 
@@ -140,16 +146,19 @@ int main(int argc, char* argv[])
     SDL_Texture* backgroundCloudTexture = SDL_CreateTextureFromSurface(renderer, surfaceBackground);
     SDL_DestroySurface(surfaceBackground);
 
-
     SDL_Texture* knightTexture = SDL_CreateTextureFromSurface(renderer, surfaceKnight);
     SDL_SetTextureScaleMode(knightTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
     SDL_DestroySurface(surfaceKnight);
-
 
     SDL_Texture* platformTexture = SDL_CreateTextureFromSurface(renderer, surfacePlatform);
     SDL_SetTextureScaleMode(platformTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
     SDL_DestroySurface(surfacePlatform);
     
+    SDL_Texture* groundTexture = SDL_CreateTextureFromSurface(renderer, surfaceGround);
+    SDL_SetTextureScaleMode(groundTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
+    SDL_DestroySurface(surfaceGround);
+
+
     const bool* keys = SDL_GetKeyboardState(NULL); 
 
 
@@ -192,11 +201,11 @@ int main(int argc, char* argv[])
 
 
     // player spawn/position variable
-    float xPosition = 350.f;
+    float xPosition = 150.f;
     float yPosition = 5.f;
     float scrollX = 0;
     float cameraX = 0.0f;
-    
+    float backgroundScrollX = cameraX * 0.3f; // smaller = slower parallax
 
     float xVelocity = 0.f; //how fast the player moves in the X Direction
     float yVelocity = 0.f; //how fast its falling/moving in Y direction
@@ -222,8 +231,8 @@ int main(int argc, char* argv[])
 
 
 
-    vector<float> platformXPositions = { 550.f, 800.f , 1050.f ,1300.f ,1600.f ,300.f ,2000.f ,1800.f ,2500.f ,1200.f };
-    vector<float> platformYPositions = { 850.f, 550.f , 450.f , 350.f,200.f,350.f , 550.f,250.f ,500.f , 700.f };
+    vector<float> platformXPositions = { 350.f, 1000.f ,1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3300.f ,3800.f ,4500.f };
+    vector<float> platformYPositions = { 550.f, 550.f , 450.f, 650.f, 650.f, 650.f, 550.f, 550.f, 650.f, 650.f };
 
     bool bottomReached = false;
     while (gameLoop)
@@ -326,28 +335,37 @@ int main(int argc, char* argv[])
         float backgroundWidth = screenWidth;
         float backgroundHeight = screenHeight;
 
-        scrollX += 0.05f; // background speed
-        if (scrollX >= backgroundWidth)
+        float backgroundScrollX = cameraX * 0.3f; //moves with cameras X position 
+
+        while (backgroundScrollX >= backgroundWidth) // keeps within one screen width, because once you scroll past 1500 itd start again at 0
         {
-            scrollX = 0;
+            backgroundScrollX -= backgroundWidth;
         }
 
-        SDL_FRect background1 = { -scrollX, 0, backgroundWidth, backgroundHeight };
-        SDL_FRect background2 = { backgroundWidth - scrollX, 0, backgroundWidth, backgroundHeight };
+        while (backgroundScrollX < 0)
+        {
+            backgroundScrollX += backgroundWidth;
+        }
+
+        SDL_FRect background1 = { -backgroundScrollX, 0, backgroundWidth, backgroundHeight }; //as player moves right, this background moves left and the scrollX becomes negative to go left
+        SDL_FRect background2 = { backgroundWidth - backgroundScrollX, 0, backgroundWidth, backgroundHeight }; // the second image so that once the player is beyond image width, this one loads, then this pattern can loop forever and constantly have an image in front, hence why the image had to be seamless
 
         SDL_RenderTexture(renderer, backgroundTexture, NULL, &background1);
         SDL_RenderTexture(renderer, backgroundTexture, NULL, &background2);
 
-
         float width;
         float height;
 
+        float scaleHeight = 1.2f; //just to stretch the image out vertically a bit
+
         //knight
         SDL_GetTextureSize(knightTexture, &width, &height);
-        float scaleHeight = 1.2f; //just to stretch the image out vertically a bit
         SDL_FRect rectKnight = { xPosition - cameraX, yPosition, 100.0f, 100.0f * scaleHeight};
         
-     
+        //Ground
+        SDL_GetTextureSize(groundTexture, &width, &height);
+        SDL_FRect rectGround = { -cameraX, 750.f, screenWidth, 80.f };
+        SDL_RenderTexture(renderer, groundTexture, NULL, &rectGround);
         
         for (int i = 0; i < 10; i++)
         {
@@ -379,6 +397,7 @@ int main(int argc, char* argv[])
         SDL_DestroyTexture(runFramesBackwards[i]);
     }
 
+    SDL_DestroyTexture(groundTexture);
     SDL_DestroyTexture(platformTexture);
     SDL_DestroyTexture(backgroundTexture);
     SDL_DestroyRenderer(renderer);
