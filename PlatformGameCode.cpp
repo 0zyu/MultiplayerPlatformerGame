@@ -114,6 +114,7 @@ int main(int argc, char* argv[])
     SDL_Surface* surfaceKnight = IMG_Load("assets/knightSprite1.png");
     SDL_Surface* surfacePlatform = IMG_Load("assets/platform.png");
     SDL_Surface* surfaceBackground = IMG_Load("assets/Clouds.png");
+    SDL_Surface* surfaceCloudBackground = IMG_Load("assets/cloudAlone.png");
 
     if (!surfaceKnight)
     {
@@ -136,6 +137,10 @@ int main(int argc, char* argv[])
     SDL_Texture* backgroundTexture = SDL_CreateTextureFromSurface(renderer, surfaceBackground);
     SDL_DestroySurface(surfaceBackground);
     
+    SDL_Texture* backgroundCloudTexture = SDL_CreateTextureFromSurface(renderer, surfaceBackground);
+    SDL_DestroySurface(surfaceBackground);
+
+
     SDL_Texture* knightTexture = SDL_CreateTextureFromSurface(renderer, surfaceKnight);
     SDL_SetTextureScaleMode(knightTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
     SDL_DestroySurface(surfaceKnight);
@@ -189,7 +194,7 @@ int main(int argc, char* argv[])
     // player spawn/position variable
     float xPosition = 350.f;
     float yPosition = 5.f;
-
+    float scrollX = 0;
     float cameraX = 0.0f;
     
 
@@ -217,8 +222,8 @@ int main(int argc, char* argv[])
 
 
 
-    vector<float> platformXPositions = { 550.f, 800.f , 1050.f ,1300.f ,1600.f ,300.f ,2000.f ,1800.f ,50.f ,1200.f };
-    vector<float> platformYPositions = { 650.f, 550.f , 450.f , 350.f,200.f,350.f , 550.f,250.f ,500.f , 700.f };
+    vector<float> platformXPositions = { 550.f, 800.f , 1050.f ,1300.f ,1600.f ,300.f ,2000.f ,1800.f ,2500.f ,1200.f };
+    vector<float> platformYPositions = { 850.f, 550.f , 450.f , 350.f,200.f,350.f , 550.f,250.f ,500.f , 700.f };
 
     bool bottomReached = false;
     while (gameLoop)
@@ -242,6 +247,7 @@ int main(int argc, char* argv[])
         }
 
         float speed = 0.7f;
+       
 
         bool moving = false;
 
@@ -310,17 +316,31 @@ int main(int argc, char* argv[])
         cameraX = xPosition - screenWidth / 2 + playerWidth / 2;
         
 
+        
+
         // Clear screen
       
         SDL_SetRenderDrawColor(renderer, 255,255,255,255);
         SDL_RenderClear(renderer);
 
+        float backgroundWidth = screenWidth;
+        float backgroundHeight = screenHeight;
+
+        scrollX += 0.05f; // background speed
+        if (scrollX >= backgroundWidth)
+        {
+            scrollX = 0;
+        }
+
+        SDL_FRect background1 = { -scrollX, 0, backgroundWidth, backgroundHeight };
+        SDL_FRect background2 = { backgroundWidth - scrollX, 0, backgroundWidth, backgroundHeight };
+
+        SDL_RenderTexture(renderer, backgroundTexture, NULL, &background1);
+        SDL_RenderTexture(renderer, backgroundTexture, NULL, &background2);
+
+
         float width;
         float height;
-
-        //background
-        SDL_FRect rectBackground = { 0, 0, screenWidth, screenHeight };
-        SDL_RenderTexture(renderer, backgroundTexture, NULL, &rectBackground);
 
         //knight
         SDL_GetTextureSize(knightTexture, &width, &height);
@@ -349,12 +369,7 @@ int main(int argc, char* argv[])
 
     }
    
-    
-    for (int i = 0; i < 10; i++)
-    {
-        SDL_DestroyTexture(platformTexture);
-    }
-
+   
     for (int i = 0; i < 8; i++)
     {
         SDL_DestroyTexture(runFramesForwards[i]);
@@ -363,6 +378,7 @@ int main(int argc, char* argv[])
     {
         SDL_DestroyTexture(runFramesBackwards[i]);
     }
+
     SDL_DestroyTexture(platformTexture);
     SDL_DestroyTexture(backgroundTexture);
     SDL_DestroyRenderer(renderer);
