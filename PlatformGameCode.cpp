@@ -141,9 +141,8 @@ int main(int argc, char* argv[])
     }
 
     SDL_Texture* backgroundTexture = SDL_CreateTextureFromSurface(renderer, surfaceBackground);
-    SDL_DestroySurface(surfaceBackground);
     
-    SDL_Texture* backgroundCloudTexture = SDL_CreateTextureFromSurface(renderer, surfaceBackground);
+    
     SDL_DestroySurface(surfaceBackground);
 
     SDL_Texture* knightTexture = SDL_CreateTextureFromSurface(renderer, surfaceKnight);
@@ -209,8 +208,10 @@ int main(int argc, char* argv[])
 
     float xVelocity = 0.f; //how fast the player moves in the X Direction
     float yVelocity = 0.f; //how fast its falling/moving in Y direction
-    float gravity = 0.003f; //gravity strength and how much it pulls down
-    float jumpStrength = -0.90f; //how high the player will jump
+    
+    float gravity = 1800.0f; //gravity strength and how much it pulls down
+    float jumpStrength = -650.0f; //how high the player will jump
+    float speed = 500.0f;
 
     float platformWidth = 200.f;
     float platformHeight = 50.f;
@@ -225,19 +226,24 @@ int main(int argc, char* argv[])
     Uint64 lastFrameTime = SDL_GetTicks();
     int frameDelay = 100; // milliseconds
 
+    bool onGround = false;
+    bool spaceWasPressed = false;
     bool facingRight = true;
     bool gameLoop = true;
+
     SDL_Event event;
 
-
-
+    
     vector<float> platformXPositions = { 350.f, 1000.f ,1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3300.f ,3800.f ,4500.f };
     vector<float> platformYPositions = { 550.f, 550.f , 450.f, 650.f, 650.f, 650.f, 550.f, 550.f, 650.f, 650.f };
 
+    Uint64 previousTime = SDL_GetTicks();
     bool bottomReached = false;
     while (gameLoop)
     {
-      
+        Uint64 currentTime = SDL_GetTicks();
+        float deltaTime = (currentTime - previousTime) / 1000.0f;
+        previousTime = currentTime;
 
         while (SDL_PollEvent(&event))
         {
@@ -245,40 +251,34 @@ int main(int argc, char* argv[])
             {
                 gameLoop = false;
             }
-            if (event.type == SDL_EVENT_KEY_DOWN)
-            {
-                if (event.key.scancode == SDL_SCANCODE_SPACE && bottomReached == true)
-                {
-                    yVelocity = jumpStrength; //set to how high it will go in the air
-                    bottomReached = false;
-                }
-            }
+            
         }
 
-        float speed = 0.7f;
-       
 
         bool moving = false;
+        xVelocity = 0;
 
         if (keys[SDL_SCANCODE_D])
         {
-
-            xVelocity = 0;
-            xVelocity += speed;
-            xPosition += xVelocity;
+            xVelocity = speed;
+            xPosition += xVelocity * deltaTime;
             facingRight = true;
             moving = true;
         }
 
         if (keys[SDL_SCANCODE_A])
         {
-            xVelocity = 0;
-            xVelocity += speed;
-            xPosition -= xVelocity;
+            xVelocity = -speed;
+            xPosition += xVelocity * deltaTime;
             facingRight = false;
             moving = true;
         }
-
+        if (keys[SDL_SCANCODE_SPACE] && onGround)
+        {
+            yVelocity = jumpStrength;
+            onGround = false;
+            bottomReached = false;
+        }
         
         
         if (moving)
@@ -300,8 +300,8 @@ int main(int argc, char* argv[])
         
         if (bottomReached == false)
         {
-            yVelocity += gravity; //meaning every frame gravity is stronger as the yvelocity adds more gravity onto it EVERY frame, e.g. frame 1 its 0.2 then frame 2 its 0.4 etc
-            yPosition += yVelocity;
+            yVelocity += gravity * deltaTime; //meaning every frame gravity is stronger as the yvelocity adds more gravity onto it EVERY frame, e.g. frame 1 its 0.2 then frame 2 its 0.4 etc
+            yPosition += yVelocity * deltaTime;
         }
         
         else
@@ -318,10 +318,12 @@ int main(int argc, char* argv[])
                 yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight, xVelocity)
                 )
             {
+
                 break;
             }
         }
-          
+
+        onGround = bottomReached;
         cameraX = xPosition - screenWidth / 2 + playerWidth / 2;
         
 
@@ -384,7 +386,7 @@ int main(int argc, char* argv[])
         }
 
         SDL_RenderPresent(renderer);
-
+       
     }
    
    
