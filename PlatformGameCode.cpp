@@ -324,7 +324,7 @@ int main(int argc, char* argv[])
         }
 
         onGround = bottomReached;
-        cameraX = xPosition - screenWidth / 2 + playerWidth / 2;
+        cameraX = xPosition - screenWidth / 2 + playerWidth / 2; 
         
 
         
@@ -339,7 +339,7 @@ int main(int argc, char* argv[])
 
         float backgroundScrollX = cameraX * 0.3f; //moves with cameras X position 
 
-        while (backgroundScrollX >= backgroundWidth) // keeps within one screen width, because once you scroll past 1500 itd start again at 0
+        while (backgroundScrollX >= backgroundWidth) // keeps within one screen width, because once you scroll past 1500 it'd start again at 0
         {
             backgroundScrollX -= backgroundWidth;
         }
@@ -365,9 +365,27 @@ int main(int argc, char* argv[])
         SDL_FRect rectKnight = { xPosition - cameraX, yPosition, 100.0f, 100.0f * scaleHeight};
         
         //Ground
-        SDL_GetTextureSize(groundTexture, &width, &height);
-        SDL_FRect rectGround = { -cameraX, 750.f, screenWidth, 80.f };
-        SDL_RenderTexture(renderer, groundTexture, NULL, &rectGround);
+        float groundWidth = screenWidth;
+        float groundHeight = 80.f;
+        float groundY = 750.f;
+
+        float groundScrollX = cameraX;
+
+        while (groundScrollX >= groundWidth)
+        {
+            groundScrollX -= groundWidth;
+        }
+
+        while (groundScrollX < 0)
+        {
+            groundScrollX += groundWidth;
+        }
+
+        SDL_FRect ground1 = { -groundScrollX, groundY, groundWidth, groundHeight };
+        SDL_FRect ground2 = { groundWidth - groundScrollX, groundY, groundWidth, groundHeight };
+
+        SDL_RenderTexture(renderer, groundTexture, NULL, &ground1);
+        SDL_RenderTexture(renderer, groundTexture, NULL, &ground2);
         
         for (int i = 0; i < 10; i++)
         {
