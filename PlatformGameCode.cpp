@@ -234,8 +234,8 @@ int main(int argc, char* argv[])
     SDL_Event event;
 
     
-    vector<float> platformXPositions = { 350.f, 1000.f ,1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3300.f ,3800.f ,4500.f };
-    vector<float> platformYPositions = { 650.f, 550.f , 450.f, 650.f, 650.f, 650.f, 550.f, 550.f, 650.f, 650.f };
+    vector<float> platformXPositions = { 450.f, 1000.f ,1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3200.f ,3800.f ,4300.f };
+    vector<float> platformYPositions = { 650.f, 575.f , 450.f, 650.f, 650.f, 650.f, 550.f, 550.f, 650.f, 650.f };
 
     Uint64 previousTime = SDL_GetTicks();
     bool bottomReached = false;
@@ -266,7 +266,7 @@ int main(int argc, char* argv[])
             moving = true;
         }
 
-        if (keys[SDL_SCANCODE_A])
+        if (keys[SDL_SCANCODE_A] && xPosition > 0.f)
         {
             xVelocity = -speed;
             xPosition += xVelocity * deltaTime;
