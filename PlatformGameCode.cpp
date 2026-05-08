@@ -7,7 +7,7 @@
 using namespace std;
 
 
-bool collision(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& platform1XPosition, float& platform1YPosition, float& yVelocity, bool& bottomReached, float screenWidth, float screenHeight, float platformWidth, float platformHeight, float xVelocity)
+bool collision(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& platformXPosition, float& platformYPosition, float& yVelocity, bool& bottomReached, float screenWidth, float screenHeight, float platformWidth, float platformHeight, float xVelocity)
 {
 
     float playerLeft = xPosition;
@@ -15,11 +15,12 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
     float playerBottom = yPosition + playerHeight;
     float playerTop = yPosition;
 
-    float platformLeft = platform1XPosition;
-    float platformRight = platform1XPosition + platformWidth;
-    float platformTop = platform1YPosition;
-    float platformBottom = platform1YPosition + platformHeight;
+    float platformLeft = platformXPosition;
+    float platformRight = platformXPosition + platformWidth;
+    float platformTop = platformYPosition;
+    float platformBottom = platformYPosition + platformHeight;
 
+    //Landing on platform
     if (playerBottom >= platformTop &&
         playerBottom <= platformTop + 20 && //+20 because it would fall through the platform without it, like a catching value
         playerRight > platformLeft &&
@@ -31,8 +32,9 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
         bottomReached = true;
         return bottomReached;
     }
+    //Hitting bottom of platform
     else if (playerTop <= platformBottom &&
-             playerTop >= platformBottom - 0.5 &&
+             playerTop >= platformBottom - 5 &&
              playerRight > platformLeft &&
              playerLeft < platformRight &&
              yVelocity <= 0)
@@ -42,35 +44,33 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
         bottomReached = true;
         return bottomReached;
     }
-    else if (xVelocity > 0 && playerRight > platformLeft &&
+    //Moving left side of platform
+    else if (xVelocity > 0 && 
+             playerRight > platformLeft &&
              playerLeft < platformLeft && 
-             playerTop < platformTop &&
-             playerBottom > platformBottom
+             playerTop < platformBottom &&
+             playerBottom > platformTop
              )
     {
         xPosition = platformLeft - playerWidth;
         xVelocity = 0;
-        bottomReached = true;
-        return bottomReached;
+        bottomReached = false;
+        return true;
     }
-    else if (xVelocity > 0 && playerLeft < platformRight &&
-        playerRight > platformRight && 
-        playerTop < platformTop &&
-        playerBottom > platformBottom
+    //Moving right side of platform
+    else if (xVelocity < 0 && 
+             playerRight > platformRight &&
+             playerLeft < platformRight && 
+             playerTop < platformBottom &&
+             playerBottom > platformTop
         )
     {
         xPosition = platformRight;
         xVelocity = 0;
-        bottomReached = true;
-        return bottomReached;
+        bottomReached = false;
+        return true;
     }
-    else if (yPosition + playerHeight >= 750.f)
-    {
-        yPosition = 750.f - playerHeight;
-        yVelocity = 0.0f;
-        bottomReached = true;
-        return bottomReached;
-    }
+    
     else
     {
         bottomReached = false;
@@ -210,7 +210,7 @@ int main(int argc, char* argv[])
     float yVelocity = 0.f; //how fast its falling/moving in Y direction
     
     float gravity = 1800.0f; //gravity strength and how much it pulls down
-    float jumpStrength = -650.0f; //how high the player will jump
+    float jumpStrength = -700.0f; //how high the player will jump
     float speed = 500.0f;
 
     float platformWidth = 200.f;
@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
 
     
     vector<float> platformXPositions = { 350.f, 1000.f ,1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3300.f ,3800.f ,4500.f };
-    vector<float> platformYPositions = { 550.f, 550.f , 450.f, 650.f, 650.f, 650.f, 550.f, 550.f, 650.f, 650.f };
+    vector<float> platformYPositions = { 650.f, 550.f , 450.f, 650.f, 650.f, 650.f, 550.f, 550.f, 650.f, 650.f };
 
     Uint64 previousTime = SDL_GetTicks();
     bool bottomReached = false;
@@ -318,11 +318,18 @@ int main(int argc, char* argv[])
                 yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight, xVelocity)
                 )
             {
-
+                
                 break;
             }
         }
-
+        //touching ground separate from collision detection because it allows all platforms to be collided with, not just the first few 
+        if (yPosition + playerHeight >= 750.f)
+        {
+            yPosition = 750.f - playerHeight;
+            yVelocity = 0.0f;
+            bottomReached = true;
+            
+        }
         onGround = bottomReached;
         cameraX = xPosition - screenWidth / 2 + playerWidth / 2; 
         
@@ -381,6 +388,7 @@ int main(int argc, char* argv[])
             groundScrollX += groundWidth;
         }
 
+        //We need two grounds because one isnt enough, 
         SDL_FRect ground1 = { -groundScrollX, groundY, groundWidth, groundHeight };
         SDL_FRect ground2 = { groundWidth - groundScrollX, groundY, groundWidth, groundHeight };
 
