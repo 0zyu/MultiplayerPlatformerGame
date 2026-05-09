@@ -115,7 +115,8 @@ int main(int argc, char* argv[])
     SDL_Surface* surfacePlatform = IMG_Load("assets/platform.png");
     SDL_Surface* surfaceBackground = IMG_Load("assets/Clouds.png");
     SDL_Surface* surfaceGround = IMG_Load("assets/ground.png");
-
+    SDL_Surface* surfaceEnemy = IMG_Load("assets/enemy1.png");
+    
     if (!surfaceKnight)
     {
         cout << "Knight image failed: " << SDL_GetError() << endl;
@@ -140,10 +141,18 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    if (!surfaceEnemy)
+    {
+        cout << "Enemy image failed: " << SDL_GetError() << endl;
+        return -1;
+    }
+
     SDL_Texture* backgroundTexture = SDL_CreateTextureFromSurface(renderer, surfaceBackground);
-    
-    
     SDL_DestroySurface(surfaceBackground);
+
+    SDL_Texture* enemyTexture = SDL_CreateTextureFromSurface(renderer, surfaceEnemy);
+    SDL_SetTextureScaleMode(enemyTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
+    SDL_DestroySurface(surfaceEnemy);
 
     SDL_Texture* knightTexture = SDL_CreateTextureFromSurface(renderer, surfaceKnight);
     SDL_SetTextureScaleMode(knightTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
@@ -161,13 +170,25 @@ int main(int argc, char* argv[])
     const bool* keys = SDL_GetKeyboardState(NULL); 
 
 
+    SDL_Texture* enemyRunFrameForwards[12];
+    for (int i = 0; i < 12; i++)
+    {
+        string filePath = "assets/enemy" + to_string(i + 1) + ".png";
+        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+        enemyRunFrameForwards[i] = SDL_CreateTextureFromSurface(renderer, tempSurface); //filled the array with texture surfaces
+
+        SDL_SetTextureScaleMode(enemyRunFrameForwards[i], SDL_SCALEMODE_NEAREST);
+
+        SDL_DestroySurface(tempSurface);
+    }
+
     //sprite animation for going forward
     SDL_Texture* runFramesForwards[8];
     for (int i = 0; i < 8; i++)
     {
         string filePath = "assets/knightSprite" + to_string(i + 1) + ".png";
         SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
-        runFramesForwards[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
+        runFramesForwards[i] = SDL_CreateTextureFromSurface(renderer, tempSurface); //filled the array with texture surfaces
 
         SDL_SetTextureScaleMode(runFramesForwards[i], SDL_SCALEMODE_NEAREST);
 
@@ -200,7 +221,7 @@ int main(int argc, char* argv[])
 
 
     // player spawn/position variable
-    float xPosition = 150.f;
+    float xPosition = 1590.f;
     float yPosition = 5.f;
     float scrollX = 0;
     float cameraX = 0.0f;
@@ -219,18 +240,23 @@ int main(int argc, char* argv[])
     int playerHeight = 120;
     int playerWidth = 100;
     int currentFrame = 0;
+    int currentFrameEnemy = 0;
 
-
-
+    float xEnemyPosition = 1800.f;
+    float yEnemyPosition = 580.f;
+    float enemySpeed = 100.0f;
+    int enemyDirection = 1;
 
     Uint64 lastFrameTime = SDL_GetTicks();
     int frameDelay = 100; // milliseconds
+    Uint64 lastEnemyFrameTime = SDL_GetTicks();
+    int enemyFrameDelay = 100;
+
 
     bool onGround = false;
     bool spaceWasPressed = false;
     bool facingRight = true;
     bool gameLoop = true;
-
     SDL_Event event;
 
     
@@ -288,13 +314,24 @@ int main(int argc, char* argv[])
             if (currentTime - lastFrameTime >= frameDelay) //if the time between last time check and current time check is more than 100 milliseconds then change the frame of the sprite
             {
                 currentFrame = (currentFrame + 1) % 8;
+                
                 lastFrameTime = currentTime;
+
             }
         }
+
         else
         {
-            currentFrame = 1;
+            currentFrame = 1;    
         }
+
+        if (currentTime - lastEnemyFrameTime >= enemyFrameDelay)
+        {
+            currentFrameEnemy = (currentFrameEnemy + 1) % 12;
+            lastEnemyFrameTime = currentTime;
+        }
+        
+
 
         //gravity
         
@@ -367,10 +404,40 @@ int main(int argc, char* argv[])
 
         float scaleHeight = 1.2f; //just to stretch the image out vertically a bit
 
+        float scaleWidth= 1.2f; //just to stretch the image out horizontally a bit
+
         //knight
         SDL_GetTextureSize(knightTexture, &width, &height);
         SDL_FRect rectKnight = { xPosition - cameraX, yPosition, 100.0f, 100.0f * scaleHeight};
         
+        //enemy
+        SDL_GetTextureSize(enemyTexture, &width, &height);
+        
+
+
+
+        xEnemyPosition += enemySpeed * enemyDirection * deltaTime;
+
+        if (xEnemyPosition >= 2300.f)
+        {
+            enemyDirection = -1;
+        }
+        else if (xEnemyPosition <= 1800.f)
+        {
+            enemyDirection = 1;
+        }
+
+        SDL_FRect rectEnemyForwards = {xEnemyPosition - cameraX, yEnemyPosition, 80.0f * scaleWidth, 80.0f};
+
+        SDL_RenderTexture(renderer, enemyRunFrameForwards[currentFrameEnemy], NULL, &rectEnemyForwards);
+        
+
+
+
+        
+        
+
+
         //Ground
         float groundWidth = screenWidth;
         float groundHeight = 80.f;
@@ -425,6 +492,7 @@ int main(int argc, char* argv[])
         SDL_DestroyTexture(runFramesBackwards[i]);
     }
 
+    SDL_DestroyTexture(enemyTexture);
     SDL_DestroyTexture(groundTexture);
     SDL_DestroyTexture(platformTexture);
     SDL_DestroyTexture(backgroundTexture);
