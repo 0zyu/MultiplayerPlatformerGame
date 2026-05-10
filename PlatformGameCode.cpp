@@ -259,13 +259,15 @@ int main(int argc, char* argv[])
     bool gameLoop = true;
     SDL_Event event;
 
-    float xMovingPlatformPosition = 1000.f;
-
+    float xMovingPlatformPosition = 700.f;
     float xMovingPlatformSpeed = 150.f;
     float xMovingPlatformDirection = 1;
     
 
-
+    float yMovingPlatformPosition = 560.f;
+    float yMovingPlatformSpeed = 125.f;
+    float yMovingPlatformDirection = 1;
+    
     
     Uint64 previousTime = SDL_GetTicks();
     bool bottomReached = false;
@@ -285,8 +287,22 @@ int main(int argc, char* argv[])
         {
             xMovingPlatformDirection = -1;
         }
+
+        yMovingPlatformPosition += yMovingPlatformSpeed * yMovingPlatformDirection * deltaTime;
+        
+
+        if (yMovingPlatformPosition < 250.f)
+        {
+            yMovingPlatformDirection = 1;
+        }
+
+        else if (yMovingPlatformPosition > 650.f)
+        {
+            yMovingPlatformDirection = -1;
+        }
+        
         vector<float> platformXPositions = { 450.f, xMovingPlatformPosition, 1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3200.f ,3800.f ,4300.f };
-        vector<float> platformYPositions = { 650.f, 575.f , 450.f, 650.f, 650.f, 650.f, 550.f, 550.f, 650.f, 650.f };
+        vector<float> platformYPositions = { 650.f, 575.f , 450.f, 650.f, 650.f, 650.f, yMovingPlatformPosition, 550.f, 650.f, 650.f };
 
 
         while (SDL_PollEvent(&event))
@@ -378,6 +394,8 @@ int main(int argc, char* argv[])
             }
         }
 
+       
+
         //touching ground separate from collision detection because it allows all platforms to be collided with, not just the first few 
         if (yPosition + playerHeight >= 750.f)
         {
@@ -390,15 +408,8 @@ int main(int argc, char* argv[])
         cameraX = xPosition - screenWidth / 2 + playerWidth / 2; 
         
 
-        
-
         // Screen
       
-
-
-
-
-
         SDL_SetRenderDrawColor(renderer, 255,255,255,255);
         SDL_RenderClear(renderer);
 
@@ -438,8 +449,6 @@ int main(int argc, char* argv[])
         SDL_GetTextureSize(enemyTexture, &width, &height);
         
 
-
-
         xEnemyPosition += enemySpeed * enemyDirection * deltaTime;
 
         if (xEnemyPosition >= 2300.f)
@@ -454,11 +463,6 @@ int main(int argc, char* argv[])
         SDL_FRect rectEnemyForwards = {xEnemyPosition - cameraX, yEnemyPosition, 80.0f * scaleWidth, 80.0f};
 
         SDL_RenderTexture(renderer, enemyRunFrameForwards[currentFrameEnemy], NULL, &rectEnemyForwards);
-        
-
-
-
-        
         
 
 
