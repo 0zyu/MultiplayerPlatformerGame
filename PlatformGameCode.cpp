@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
 
 
     // player spawn/position variable
-    float xPosition = 1590.f;
+    float xPosition = 500.f;
     float yPosition = 5.f;
     float scrollX = 0;
     float cameraX = 0.0f;
@@ -259,10 +259,14 @@ int main(int argc, char* argv[])
     bool gameLoop = true;
     SDL_Event event;
 
-    
-    vector<float> platformXPositions = { 450.f, 1000.f ,1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3200.f ,3800.f ,4300.f };
-    vector<float> platformYPositions = { 650.f, 575.f , 450.f, 650.f, 650.f, 650.f, 550.f, 550.f, 650.f, 650.f };
+    float xMovingPlatformPosition = 1000.f;
 
+    float xMovingPlatformSpeed = 150.f;
+    float xMovingPlatformDirection = 1;
+    
+
+
+    
     Uint64 previousTime = SDL_GetTicks();
     bool bottomReached = false;
     while (gameLoop)
@@ -270,6 +274,20 @@ int main(int argc, char* argv[])
         Uint64 currentTime = SDL_GetTicks();
         float deltaTime = (currentTime - previousTime) / 1000.0f;
         previousTime = currentTime;
+
+        xMovingPlatformPosition += xMovingPlatformSpeed * xMovingPlatformDirection * deltaTime;
+
+        if (xMovingPlatformPosition < 700.f)
+        {
+            xMovingPlatformDirection = 1;
+        }
+        else if (xMovingPlatformPosition > 1300.f)
+        {
+            xMovingPlatformDirection = -1;
+        }
+        vector<float> platformXPositions = { 450.f, xMovingPlatformPosition, 1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3200.f ,3800.f ,4300.f };
+        vector<float> platformYPositions = { 650.f, 575.f , 450.f, 650.f, 650.f, 650.f, 550.f, 550.f, 650.f, 650.f };
+
 
         while (SDL_PollEvent(&event))
         {
@@ -359,6 +377,7 @@ int main(int argc, char* argv[])
                 break;
             }
         }
+
         //touching ground separate from collision detection because it allows all platforms to be collided with, not just the first few 
         if (yPosition + playerHeight >= 750.f)
         {
@@ -373,8 +392,13 @@ int main(int argc, char* argv[])
 
         
 
-        // Clear screen
+        // Screen
       
+
+
+
+
+
         SDL_SetRenderDrawColor(renderer, 255,255,255,255);
         SDL_RenderClear(renderer);
 
