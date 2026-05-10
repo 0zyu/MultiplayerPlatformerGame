@@ -7,7 +7,9 @@
 using namespace std;
 
 
-bool collision(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& platformXPosition, float& platformYPosition, float& yVelocity, bool& bottomReached, float screenWidth, float screenHeight, float platformWidth, float platformHeight, float xVelocity)
+bool collision(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& platformXPosition, 
+               float& platformYPosition, float& yVelocity, bool& bottomReached, float screenWidth, float screenHeight, 
+               float platformWidth, float platformHeight, float xVelocity, float yMovingPlatformDirection)
 {
 
     float playerLeft = xPosition;
@@ -28,7 +30,7 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
         yVelocity >= 0)
     {
         yPosition = platformTop - playerHeight;
-        yVelocity = 0.0f;
+        
         bottomReached = true;
         return bottomReached;
     }
@@ -301,8 +303,8 @@ int main(int argc, char* argv[])
             yMovingPlatformDirection = -1;
         }
         
-        vector<float> platformXPositions = { 450.f, xMovingPlatformPosition, 1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3200.f ,3800.f ,4300.f };
-        vector<float> platformYPositions = { 650.f, 575.f , 450.f, 650.f, 650.f, 650.f, yMovingPlatformPosition, 550.f, 650.f, 650.f };
+        vector<float> platformXPositions = {450.f, xMovingPlatformPosition, 1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3200.f ,3800.f ,4300.f};
+        vector<float> platformYPositions = {650.f, 575.f , 450.f, 650.f, 650.f, 650.f, yMovingPlatformPosition, 550.f, 650.f, 650.f};
 
 
         while (SDL_PollEvent(&event))
@@ -368,7 +370,6 @@ int main(int argc, char* argv[])
 
 
         //gravity
-        
         if (bottomReached == false)
         {
             yVelocity += gravity * deltaTime; //meaning every frame gravity is stronger as the yvelocity adds more gravity onto it EVERY frame, e.g. frame 1 its 0.2 then frame 2 its 0.4 etc
@@ -386,7 +387,7 @@ int main(int argc, char* argv[])
         {
 
             if (collision(xPosition, yPosition, playerWidth, playerHeight, platformXPositions[i], platformYPositions[i], 
-                yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight, xVelocity)
+                yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight, xVelocity, yMovingPlatformDirection)
                 )
             {
                 
