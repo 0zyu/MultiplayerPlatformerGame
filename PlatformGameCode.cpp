@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
         cout << SDL_GetError() << endl;
     }
 
-    TTF_Font* font = TTF_OpenFont("assets/PixelOperator8-Bold.ttf", 64);
+    TTF_Font* font = TTF_OpenFont("assets/PixelOperator8-Bold.ttf", 110);
     if (!font)
     {
         cout <<SDL_GetError() << endl;
@@ -147,7 +147,8 @@ int main(int argc, char* argv[])
     }
 
     SDL_Color white = { 255, 255, 255, 255 };
-    
+    SDL_Color black = { 0,0,0,0 };
+
 
 
     SDL_Surface* surfaceKnight = IMG_Load("assets/knightSprite1.png");
@@ -205,9 +206,12 @@ int main(int argc, char* argv[])
     SDL_SetTextureScaleMode(groundTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
     SDL_DestroySurface(surfaceGround);
 
-    SDL_Surface* textSurface = TTF_RenderText_Blended(font, "Knight Jump!", 0, white);
-    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    SDL_Surface* textSurface1 = TTF_RenderText_Blended(font, "Knight Jump!", 0, white);
+    SDL_Surface* textSurface2 = TTF_RenderText_Blended(font, "Knight Jump!", 0, black);
 
+    SDL_Texture* textTexture1 = SDL_CreateTextureFromSurface(renderer, textSurface1);
+
+    SDL_Texture* textTexture2 = SDL_CreateTextureFromSurface(renderer, textSurface2);
     const bool* keys = SDL_GetKeyboardState(NULL); 
 
 
@@ -559,9 +563,13 @@ int main(int argc, char* argv[])
             SDL_RenderTexture(renderer, runFramesBackwards[currentFrame], NULL, &rectKnight);
         }
 
-        SDL_FRect textRect = { 100.f - cameraX, 100.f, (float)textSurface->w,(float)textSurface->h };
-        SDL_RenderTexture(renderer, textTexture, NULL, &textRect);
+        SDL_FRect textRect1 = { 100.f - cameraX, 100.f, (float)textSurface1->w,(float)textSurface1->h };
+        SDL_FRect textRect2 = { 100.f - cameraX - 5, 95.f, (float)textSurface2->w,(float)textSurface2->h };
+
+        SDL_RenderTexture(renderer, textTexture2, NULL, &textRect2);
+        SDL_RenderTexture(renderer, textTexture1, NULL, &textRect1);
         
+
 
 
         SDL_RenderPresent(renderer);
@@ -578,8 +586,10 @@ int main(int argc, char* argv[])
         SDL_DestroyTexture(runFramesBackwards[i]);
     }
 
-    SDL_DestroyTexture(textTexture);
-    SDL_DestroySurface(textSurface);
+    SDL_DestroyTexture(textTexture2);
+    SDL_DestroySurface(textSurface2);
+    SDL_DestroyTexture(textTexture1);
+    SDL_DestroySurface(textSurface1);
     TTF_CloseFont(font);
     SDL_DestroyTexture(enemyTexture);
     SDL_DestroyTexture(groundTexture);
