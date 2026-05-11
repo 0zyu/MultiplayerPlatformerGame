@@ -8,10 +8,66 @@
 
 using namespace std;
 
+bool collisionWithEnemy(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& xEnemyPosition, float& yEnemyPosition, float& xVelocity, float& yVelocity, bool& bottomReached)
+{
+    float playerLeft = xPosition;
+    float playerRight = xPosition + playerWidth;
+    float playerBottom = yPosition + playerHeight;
+    float playerTop = yPosition;
 
+    float enemyLeft = xEnemyPosition;
+    float enemyRight = xEnemyPosition + 80.f; //enemy width
+    float enemyTop = yEnemyPosition;
+    float enemyBottom = yEnemyPosition + 80.f; //enemy height
+
+
+    //need to do top, right, and left of the enemy, exact same as platform logic but without the bottom
+    
+	//landing on top of enemy
+    if (playerBottom >= enemyTop &&
+        playerBottom <= enemyTop + 20 &&
+		playerLeft > enemyLeft &&
+		playerRight < enemyRight &&
+        yVelocity >= 0
+        )
+    {
+		yPosition = enemyTop - playerHeight;
+        bottomReached = true;
+        return bottomReached;
+    }
+
+    //left side of enemy hit
+    else if (playerRight > enemyLeft &&
+        playerLeft < enemyLeft && 
+        playerTop <= enemyBottom &&
+        playerBottom >= enemyTop &&
+        xVelocity >= 0)
+    {
+        xPosition = 500.f;
+        xVelocity = 0;
+        bottomReached = false;
+        return true;
+    }
+
+    //right side of enemy hit
+    else if (playerLeft < enemyRight &&
+             playerRight > enemyRight &&
+             playerTop <= enemyBottom &&
+             playerBottom >= enemyTop &&
+             xVelocity <= 0)
+    {
+        xPosition = 500.f;
+        xVelocity = 0;
+        bottomReached = false;
+        return true;
+    }
+    return false;
+    
+}
 bool collision(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& platformXPosition, 
                float& platformYPosition, float& yVelocity, bool& bottomReached, float screenWidth, float screenHeight, 
-               float platformWidth, float platformHeight, float xVelocity, float yMovingPlatformDifference, float xMovingPlatformDifference, int i, int xMovingPlatformDirection)
+               float platformWidth, float platformHeight, float xVelocity, float yMovingPlatformDifference, 
+               float xMovingPlatformDifference, int i, int xMovingPlatformDirection)
 {
 
     float playerLeft = xPosition;
@@ -62,7 +118,7 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
         bottomReached = true;
         return bottomReached;
     }
-    //Moving left side of platform
+    //Hitting left side of platform
     else if (xVelocity > 0 && 
              playerRight > platformLeft &&
              playerLeft < platformLeft && 
@@ -75,7 +131,7 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
         bottomReached = false;
         return true;
     }
-    //Moving right side of platform
+    //Hitting right side of platform
     else if (xVelocity < 0 && 
              playerRight > platformRight &&
              playerLeft < platformRight && 
@@ -116,7 +172,7 @@ int main(int argc, char* argv[])
         cout << SDL_GetError() << endl;
     }
 
-    TTF_Font* font = TTF_OpenFont("assets/PixelOperator8-Bold.ttf", 110);
+    TTF_Font* font = TTF_OpenFont("assets/PixelOperator8-Bold.ttf", 95);
     if (!font)
     {
         cout <<SDL_GetError() << endl;
@@ -146,8 +202,8 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    SDL_Color white = { 255, 255, 255, 255 };
-    SDL_Color black = { 0,0,0,0 };
+    SDL_Color primaryColour = { 255, 255, 255, 255 };
+    SDL_Color secondaryColour = { 0,0,0,0 };
 
 
 
@@ -206,8 +262,8 @@ int main(int argc, char* argv[])
     SDL_SetTextureScaleMode(groundTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
     SDL_DestroySurface(surfaceGround);
 
-    SDL_Surface* textSurface1 = TTF_RenderText_Blended(font, "Knight Jump!", 0, white);
-    SDL_Surface* textSurface2 = TTF_RenderText_Blended(font, "Knight Jump!", 0, black);
+    SDL_Surface* textSurface1 = TTF_RenderText_Blended(font, "Knight Jump!", 0, primaryColour);
+    SDL_Surface* textSurface2 = TTF_RenderText_Blended(font, "Knight Jump!", 0, secondaryColour);
 
     SDL_Texture* textTexture1 = SDL_CreateTextureFromSurface(renderer, textSurface1);
 
@@ -521,6 +577,13 @@ int main(int argc, char* argv[])
 
         SDL_RenderTexture(renderer, enemyRunFrameForwards[currentFrameEnemy], NULL, &rectEnemyForwards);
         
+        if (collisionWithEnemy(xPosition, yPosition, playerWidth, playerHeight, xEnemyPosition, yEnemyPosition, xVelocity, yVelocity, bottomReached))
+        {
+            cout << "Collided" << endl;
+            //xPosition = 500.f;
+            //yPosition = 5.f;
+
+        }
 
 
         //Ground
@@ -551,7 +614,7 @@ int main(int argc, char* argv[])
         {
             SDL_GetTextureSize(platformTexture, &width, &height);
             SDL_FRect rectPlatforms = { platformXPositions[i] - cameraX, platformYPositions[i], platformWidth, platformHeight};
-            SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatforms);
+            SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatforms); 
         }
 
         if (facingRight)
@@ -563,8 +626,8 @@ int main(int argc, char* argv[])
             SDL_RenderTexture(renderer, runFramesBackwards[currentFrame], NULL, &rectKnight);
         }
 
-        SDL_FRect textRect1 = { 100.f - cameraX, 100.f, (float)textSurface1->w,(float)textSurface1->h };
-        SDL_FRect textRect2 = { 100.f - cameraX - 5, 95.f, (float)textSurface2->w,(float)textSurface2->h };
+        SDL_FRect textRect1 = {50 - cameraX, 100.f, (float)textSurface1->w,(float)textSurface1->h };
+        SDL_FRect textRect2 = {50 - cameraX - 5, 95.f, (float)textSurface2->w,(float)textSurface2->h };
 
         SDL_RenderTexture(renderer, textTexture2, NULL, &textRect2);
         SDL_RenderTexture(renderer, textTexture1, NULL, &textRect1);
