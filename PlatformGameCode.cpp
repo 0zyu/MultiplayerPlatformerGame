@@ -9,7 +9,7 @@ using namespace std;
 
 bool collision(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& platformXPosition, 
                float& platformYPosition, float& yVelocity, bool& bottomReached, float screenWidth, float screenHeight, 
-               float platformWidth, float platformHeight, float xVelocity, float yMovingPlatformDirection)
+               float platformWidth, float platformHeight, float xVelocity, float yMovingPlatformDirection, float xMovingPlatformDelta, int i, int xMovingPlatformDirection)
 {
 
     float playerLeft = xPosition;
@@ -21,7 +21,8 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
     float platformRight = platformXPosition + platformWidth;
     float platformTop = platformYPosition;
     float platformBottom = platformYPosition + platformHeight;
-
+    
+    
     //Landing on platform
     if (playerBottom >= platformTop &&
         playerBottom <= platformTop + 20 && //+20 because it would fall through the platform without it, like a catching value
@@ -30,7 +31,13 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
         yVelocity >= 0)
     {
         yPosition = platformTop - playerHeight;
-        
+        if (xPosition + playerWidth < platformRight && xPosition + playerWidth > platformLeft && i == 1)
+        {
+            xPosition += xMovingPlatformDelta;
+        }
+      
+
+
         bottomReached = true;
         return bottomReached;
     }
@@ -78,6 +85,7 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
         bottomReached = false;
         return bottomReached;
     }
+    i++;
 }
 
 
@@ -94,6 +102,7 @@ int main(int argc, char* argv[])
     float screenWidth = 1500;
     float screenHeight = 800;
 
+    int i = 0;
 
     // Create window (SDL3 version)
     SDL_Window* window = SDL_CreateWindow("Platformer", screenWidth, screenHeight, 0);
@@ -279,7 +288,13 @@ int main(int argc, char* argv[])
         float deltaTime = (currentTime - previousTime) / 1000.0f;
         previousTime = currentTime;
 
+
+        float previousXMovingPlatformPosition = xMovingPlatformPosition; //gets the last position from the last frame, because after this line the position gets updated 
+
         xMovingPlatformPosition += xMovingPlatformSpeed * xMovingPlatformDirection * deltaTime;
+        
+        float xMovingPlatformDelta = xMovingPlatformPosition - previousXMovingPlatformPosition; //the difference between the two platforms, showing how much it has moved
+
 
         if (xMovingPlatformPosition < 700.f)
         {
@@ -290,6 +305,7 @@ int main(int argc, char* argv[])
             xMovingPlatformDirection = -1;
         }
 
+        //positions is based on how fast it moves and direction being whether its moved up or down then multiplied by delta for same speed at different frame rates
         yMovingPlatformPosition += yMovingPlatformSpeed * yMovingPlatformDirection * deltaTime;
         
 
@@ -302,7 +318,9 @@ int main(int argc, char* argv[])
         {
             yMovingPlatformDirection = -1;
         }
-        
+
+
+        //platform positions
         vector<float> platformXPositions = {450.f, xMovingPlatformPosition, 1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3200.f ,3800.f ,4300.f};
         vector<float> platformYPositions = {650.f, 575.f , 450.f, 650.f, 650.f, 650.f, yMovingPlatformPosition, 550.f, 650.f, 650.f};
 
@@ -387,7 +405,8 @@ int main(int argc, char* argv[])
         {
 
             if (collision(xPosition, yPosition, playerWidth, playerHeight, platformXPositions[i], platformYPositions[i], 
-                yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight, xVelocity, yMovingPlatformDirection)
+                yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight, xVelocity, yMovingPlatformDirection,
+                xMovingPlatformDelta, i, xMovingPlatformDirection)
                 )
             {
                 
