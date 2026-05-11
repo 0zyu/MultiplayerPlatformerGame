@@ -1,15 +1,17 @@
 #include <SDL3/SDL.h>
 #include <iostream>
 #include <SDL3_image/SDL_image.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <string>
 #include <vector>
+
 
 using namespace std;
 
 
 bool collision(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& platformXPosition, 
                float& platformYPosition, float& yVelocity, bool& bottomReached, float screenWidth, float screenHeight, 
-               float platformWidth, float platformHeight, float xVelocity, float yMovingPlatformDirection, float xMovingPlatformDelta, int i, int xMovingPlatformDirection)
+               float platformWidth, float platformHeight, float xVelocity, float yMovingPlatformDifference, float xMovingPlatformDifference, int i, int xMovingPlatformDirection)
 {
 
     float playerLeft = xPosition;
@@ -30,14 +32,21 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
         playerLeft < platformRight &&
         yVelocity >= 0)
     {
-        yPosition = platformTop - playerHeight;
-        if (xPosition + playerWidth < platformRight && xPosition + playerWidth > platformLeft && i == 1)
+        if (i != 6)
         {
-            xPosition += xMovingPlatformDelta;
+
+            yPosition = platformTop - playerHeight;
+            yVelocity = 0;
         }
-      
-
-
+        if (i == 1)
+        {
+            xPosition += xMovingPlatformDifference; //Adds the difference between the two platform positions to the player position so it can move with the platform
+        }
+        
+        if (i == 6)
+        {
+            yPosition += yMovingPlatformDifference;
+        }
         bottomReached = true;
         return bottomReached;
     }
@@ -98,6 +107,21 @@ int main(int argc, char* argv[])
         cout << "SDL failed: " << SDL_GetError() << endl;
         return -1;
     }
+
+
+    TTF_Init();
+    
+    if (TTF_Init() < 0)
+    {
+        cout << SDL_GetError() << endl;
+    }
+
+    TTF_Font* font = TTF_OpenFont("assets/PixelOperator8-Bold.ttf", 64);
+    if (!font)
+    {
+        cout <<SDL_GetError() << endl;
+    }
+    
     
     float screenWidth = 1500;
     float screenHeight = 800;
@@ -121,6 +145,10 @@ int main(int argc, char* argv[])
         cout << "Renderer failed: " << SDL_GetError() << endl;
         return -1;
     }
+
+    SDL_Color white = { 255, 255, 255, 255 };
+    
+
 
     SDL_Surface* surfaceKnight = IMG_Load("assets/knightSprite1.png");
     SDL_Surface* surfacePlatform = IMG_Load("assets/platform.png");
@@ -177,6 +205,8 @@ int main(int argc, char* argv[])
     SDL_SetTextureScaleMode(groundTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
     SDL_DestroySurface(surfaceGround);
 
+    SDL_Surface* textSurface = TTF_RenderText_Blended(font, "Knight Jump!", 0, white);
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 
     const bool* keys = SDL_GetKeyboardState(NULL); 
 
@@ -291,10 +321,10 @@ int main(int argc, char* argv[])
 
         float previousXMovingPlatformPosition = xMovingPlatformPosition; //gets the last position from the last frame, because after this line the position gets updated 
 
-        xMovingPlatformPosition += xMovingPlatformSpeed * xMovingPlatformDirection * deltaTime;
+        xMovingPlatformPosition += xMovingPlatformSpeed * xMovingPlatformDirection * deltaTime; //the new position of the platform
         
-        float xMovingPlatformDelta = xMovingPlatformPosition - previousXMovingPlatformPosition; //the difference between the two platforms, showing how much it has moved
-
+        float xMovingPlatformDifference = xMovingPlatformPosition - previousXMovingPlatformPosition; //the difference between the two platforms, showing how much it has moved
+         
 
         if (xMovingPlatformPosition < 700.f)
         {
@@ -305,9 +335,13 @@ int main(int argc, char* argv[])
             xMovingPlatformDirection = -1;
         }
 
+
+        float previousYMovingPlatformPosition = yMovingPlatformPosition; //gets the last position from the last frame, because after this line the position gets updated 
+
         //positions is based on how fast it moves and direction being whether its moved up or down then multiplied by delta for same speed at different frame rates
         yMovingPlatformPosition += yMovingPlatformSpeed * yMovingPlatformDirection * deltaTime;
         
+        float yMovingPlatformDifference = yMovingPlatformPosition - previousYMovingPlatformPosition; //the difference between the two platforms, showing how much it has moved
 
         if (yMovingPlatformPosition < 250.f)
         {
@@ -405,8 +439,8 @@ int main(int argc, char* argv[])
         {
 
             if (collision(xPosition, yPosition, playerWidth, playerHeight, platformXPositions[i], platformYPositions[i], 
-                yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight, xVelocity, yMovingPlatformDirection,
-                xMovingPlatformDelta, i, xMovingPlatformDirection)
+                yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight, xVelocity, yMovingPlatformDifference,
+                xMovingPlatformDifference, i, xMovingPlatformDirection)
                 )
             {
                 
@@ -429,8 +463,7 @@ int main(int argc, char* argv[])
         
 
         // Screen
-      
-        SDL_SetRenderDrawColor(renderer, 255,255,255,255);
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderClear(renderer);
 
         float backgroundWidth = screenWidth;
@@ -526,6 +559,11 @@ int main(int argc, char* argv[])
             SDL_RenderTexture(renderer, runFramesBackwards[currentFrame], NULL, &rectKnight);
         }
 
+        SDL_FRect textRect = { 100.f - cameraX, 100.f, (float)textSurface->w,(float)textSurface->h };
+        SDL_RenderTexture(renderer, textTexture, NULL, &textRect);
+        
+
+
         SDL_RenderPresent(renderer);
        
     }
@@ -540,12 +578,16 @@ int main(int argc, char* argv[])
         SDL_DestroyTexture(runFramesBackwards[i]);
     }
 
+    SDL_DestroyTexture(textTexture);
+    SDL_DestroySurface(textSurface);
+    TTF_CloseFont(font);
     SDL_DestroyTexture(enemyTexture);
     SDL_DestroyTexture(groundTexture);
     SDL_DestroyTexture(platformTexture);
     SDL_DestroyTexture(backgroundTexture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    TTF_Quit();
     SDL_Quit();
 
     return 0;
