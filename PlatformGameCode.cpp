@@ -8,6 +8,11 @@
 
 using namespace std;
 
+
+
+
+
+
 bool collisionWithEnemy(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& xEnemyPosition, float& yEnemyPosition, 
     float& xVelocity, float& yVelocity, bool& bottomReached, bool& enemyKilled, Uint64& enemyTimer)
 {
@@ -112,6 +117,7 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
         bottomReached = true;
         return bottomReached;
     }
+
     //Hitting bottom of platform
     else if (playerTop <= platformBottom &&
              playerTop >= platformBottom - 5 &&
@@ -212,13 +218,19 @@ int main(int argc, char* argv[])
     SDL_Color secondaryColour = { 0,0,0,0 };
 
 
-
     SDL_Surface* surfaceKnight = IMG_Load("assets/knightSprite1.png");
     SDL_Surface* surfacePlatform = IMG_Load("assets/platform.png");
     SDL_Surface* surfaceBackground = IMG_Load("assets/Clouds.png");
     SDL_Surface* surfaceGround = IMG_Load("assets/ground.png");
     SDL_Surface* surfaceEnemy = IMG_Load("assets/enemy1.png");
-    
+	SDL_Surface* surfaceRolling = IMG_Load("assets/rollRight1.png");
+
+    if (!surfaceRolling)
+    {
+		cout << "Rolling image failed: " << SDL_GetError() << endl;
+		return -1;
+    }
+
     if (!surfaceKnight)
     {
         cout << "Knight image failed: " << SDL_GetError() << endl;
@@ -249,6 +261,12 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+
+
+    SDL_Texture* rollingTexture = SDL_CreateTextureFromSurface(renderer, surfaceRolling);
+    SDL_DestroySurface(surfaceRolling);
+
+
     SDL_Texture* backgroundTexture = SDL_CreateTextureFromSurface(renderer, surfaceBackground);
     SDL_DestroySurface(surfaceBackground);
 
@@ -275,6 +293,31 @@ int main(int argc, char* argv[])
 
     SDL_Texture* textTexture2 = SDL_CreateTextureFromSurface(renderer, textSurface2);
     const bool* keys = SDL_GetKeyboardState(NULL); 
+
+
+
+    SDL_Texture* rollingRightAnimation[8];
+    for (int i = 0; i < 8; i++)
+    {
+        string filePath = "assets/rollRight" + to_string(i + 1) + ".png";
+        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+        rollingRightAnimation[i] = SDL_CreateTextureFromSurface(renderer, tempSurface); //filled the array with texture surfaces
+
+        SDL_SetTextureScaleMode(rollingRightAnimation[i], SDL_SCALEMODE_NEAREST);
+
+        SDL_DestroySurface(tempSurface);
+    }
+
+	SDL_Texture* rollingLeftAnimation[8];
+    for (int i = 0; i < 8; i++)
+    {
+        string filePath = "assets/rollLeft" + to_string(i + 1) + ".png";
+        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+        rollingLeftAnimation[i] = SDL_CreateTextureFromSurface(renderer, tempSurface); //filled the array with texture surfaces
+        SDL_SetTextureScaleMode(rollingLeftAnimation[i], SDL_SCALEMODE_NEAREST);
+        SDL_DestroySurface(tempSurface);
+	}
+
 
 
     SDL_Texture* enemyRunFrameForwards[12];
@@ -340,14 +383,21 @@ int main(int argc, char* argv[])
     float gravity = 1800.0f; //gravity strength and how much it pulls down
     float jumpStrength = -700.0f; //how high the player will jump
     float speed = 500.0f;
-
+    float rollingFrameDelay = 80.f;
     float platformWidth = 200.f;
     float platformHeight = 50.f;
+    float width;
+    float height;
+
+    float scaleHeight = 1.2f; //just to stretch the image out vertically a bit
+
+    float scaleWidth = 1.2f; //just to stretch the image out horizontally a bit
 
     int playerHeight = 120;
     int playerWidth = 100;
     int currentFrame = 0;
     int currentFrameEnemy = 0;
+    int currentFrameRolling = 0;
 
     float xEnemyPosition = 1800.f;
     float yEnemyPosition = 580.f;
@@ -357,8 +407,10 @@ int main(int argc, char* argv[])
     Uint64 lastFrameTime = SDL_GetTicks();
     int frameDelay = 100; // milliseconds
     Uint64 lastEnemyFrameTime = SDL_GetTicks();
+	Uint64 lastFrameTimeRolling = SDL_GetTicks();
     int enemyFrameDelay = 100;
 
+    bool rolling = false;
     bool enemyKilled = false;
     bool onGround = false;
     bool spaceWasPressed = false;
@@ -435,10 +487,11 @@ int main(int argc, char* argv[])
             
         }
 
+        rolling = false;
 
         bool moving = false;
         xVelocity = 0;
-
+   
         if (keys[SDL_SCANCODE_D])
         {
             xVelocity = speed;
@@ -454,6 +507,29 @@ int main(int argc, char* argv[])
             facingRight = false;
             moving = true;
         }
+    
+        
+        if (keys[SDL_SCANCODE_W] && xPosition > 0.f)
+        {
+            rolling = true;
+            moving = false;
+			
+            if (facingRight)
+            {
+                xVelocity = 0;
+                xVelocity += speed * deltaTime;
+            }
+            else
+            {
+
+                xVelocity = 0;
+                xVelocity += -speed * deltaTime;
+            }
+
+            xPosition += xVelocity * deltaTime;
+        }
+
+
         if (keys[SDL_SCANCODE_SPACE] && onGround)
         {
             yVelocity = jumpStrength;
@@ -487,6 +563,25 @@ int main(int argc, char* argv[])
         }
         
 
+        //knight roll
+        SDL_GetTextureSize(rollingTexture, &width, &height);
+        SDL_FRect rollingKnight = { xPosition - cameraX, yPosition, 100.0f, 100.0f * scaleHeight };
+
+        if (rolling)
+        {
+            if (currentTime - lastFrameTimeRolling >= rollingFrameDelay)
+            {
+                currentFrameRolling = (currentFrameRolling + 1) % 8;
+                lastFrameTimeRolling = currentTime;
+            }
+        }
+        else
+        {
+            currentFrameRolling = 0;
+        }
+
+       
+        
 
         //gravity
         if (bottomReached == false)
@@ -532,11 +627,14 @@ int main(int argc, char* argv[])
         // Screen
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderClear(renderer);
+        //must render stuff after this
+
+
 
         float backgroundWidth = screenWidth;
         float backgroundHeight = screenHeight;
 
-        float backgroundScrollX = cameraX * 0.3f; //moves with cameras X position 
+        float backgroundScrollX = cameraX * 0.1f; //moves with cameras X position 
 
         while (backgroundScrollX >= backgroundWidth) // keeps within one screen width, because once you scroll past 1500 it'd start again at 0
         {
@@ -554,13 +652,7 @@ int main(int argc, char* argv[])
         SDL_RenderTexture(renderer, backgroundTexture, NULL, &background1);
         SDL_RenderTexture(renderer, backgroundTexture, NULL, &background2);
 
-        float width;
-        float height;
-
-        float scaleHeight = 1.2f; //just to stretch the image out vertically a bit
-
-        float scaleWidth= 1.2f; //just to stretch the image out horizontally a bit
-
+       
         //knight
         SDL_GetTextureSize(knightTexture, &width, &height);
         SDL_FRect rectKnight = { xPosition - cameraX, yPosition, 100.0f, 100.0f * scaleHeight};
@@ -569,6 +661,7 @@ int main(int argc, char* argv[])
         
         SDL_GetTextureSize(enemyTexture, &width, &height);
         
+       
 
         xEnemyPosition += enemySpeed * enemyDirection * deltaTime;
 
@@ -585,12 +678,11 @@ int main(int argc, char* argv[])
 
         SDL_RenderTexture(renderer, enemyRunFrameForwards[currentFrameEnemy], NULL, &rectEnemyForwards);
         
-        if (collisionWithEnemy(xPosition, yPosition, playerWidth, playerHeight, xEnemyPosition, yEnemyPosition, xVelocity, yVelocity, bottomReached, enemyKilled, enemyTimer))
-        {
-            cout << "Collided" << endl;
-           
-            
-        }
+        collisionWithEnemy(xPosition, yPosition, playerWidth, playerHeight, xEnemyPosition, yEnemyPosition, xVelocity, yVelocity, bottomReached, enemyKilled, enemyTimer);
+        
+        
+         
+      
 
         if (enemyKilled == true)
         {
@@ -635,21 +727,34 @@ int main(int argc, char* argv[])
             SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatforms); 
         }
 
-        if (facingRight)
-        {
-            SDL_RenderTexture(renderer, runFramesForwards[currentFrame], NULL, &rectKnight);
-        }
-        else
-        {
-            SDL_RenderTexture(renderer, runFramesBackwards[currentFrame], NULL, &rectKnight);
-        }
-
         SDL_FRect textRect1 = {50 - cameraX, 100.f, (float)textSurface1->w,(float)textSurface1->h };
         SDL_FRect textRect2 = {50 - cameraX - 5, 95.f, (float)textSurface2->w,(float)textSurface2->h };
 
         SDL_RenderTexture(renderer, textTexture2, NULL, &textRect2);
         SDL_RenderTexture(renderer, textTexture1, NULL, &textRect1);
         
+        if (rolling)
+        {
+            if (facingRight)
+            {
+                SDL_RenderTexture(renderer, rollingRightAnimation[currentFrameRolling], NULL, &rectKnight);
+            }
+            else
+            {
+                SDL_RenderTexture(renderer, rollingLeftAnimation[currentFrameRolling], NULL, &rectKnight);
+            }
+        }
+        else
+        {
+            if (facingRight)
+            {
+                SDL_RenderTexture(renderer, runFramesForwards[currentFrame], NULL, &rectKnight);
+            }
+            else
+            {
+                SDL_RenderTexture(renderer, runFramesBackwards[currentFrame], NULL, &rectKnight);
+            }
+        }
 
 
 
@@ -667,6 +772,7 @@ int main(int argc, char* argv[])
         SDL_DestroyTexture(runFramesBackwards[i]);
     }
 
+    SDL_DestroyTexture(rollingTexture);
     SDL_DestroyTexture(textTexture2);
     SDL_DestroySurface(textSurface2);
     SDL_DestroyTexture(textTexture1);
