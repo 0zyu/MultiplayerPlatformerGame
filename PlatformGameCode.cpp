@@ -421,7 +421,8 @@ int main(int argc, char* argv[])
     float xMovingPlatformPosition = 700.f;
     float xMovingPlatformSpeed = 150.f;
     float xMovingPlatformDirection = 1;
-    
+     
+
 
     float yMovingPlatformPosition = 560.f;
     float yMovingPlatformSpeed = 125.f;
