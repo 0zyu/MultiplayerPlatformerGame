@@ -8,7 +8,8 @@
 
 using namespace std;
 
-bool collisionWithEnemy(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& xEnemyPosition, float& yEnemyPosition, float& xVelocity, float& yVelocity, bool& bottomReached)
+bool collisionWithEnemy(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& xEnemyPosition, float& yEnemyPosition, 
+    float& xVelocity, float& yVelocity, bool& bottomReached, bool& enemyKilled, Uint64& enemyTimer)
 {
     float playerLeft = xPosition;
     float playerRight = xPosition + playerWidth;
@@ -20,18 +21,21 @@ bool collisionWithEnemy(float& xPosition, float& yPosition, int& playerWidth, in
     float enemyTop = yEnemyPosition;
     float enemyBottom = yEnemyPosition + 80.f; //enemy height
 
-
     //need to do top, right, and left of the enemy, exact same as platform logic but without the bottom
     
 	//landing on top of enemy
     if (playerBottom >= enemyTop &&
         playerBottom <= enemyTop + 20 &&
-		playerLeft > enemyLeft &&
-		playerRight < enemyRight &&
+        playerRight > enemyLeft + 20 &&
+        playerLeft < enemyRight - 20 &&
         yVelocity >= 0
         )
     {
-		yPosition = enemyTop - playerHeight;
+		//yPosition = enemyTop - playerHeight;
+		yEnemyPosition = 2000.f; //moves enemy off screen instead of deleting it, because deleting it would cause problems with the animation frames and texture rendering etc
+        
+		enemyTimer = SDL_GetTicks(); //starts the timer for when the enemy is killed, so that after a certain time it can respawn
+        enemyKilled = true;
         bottomReached = true;
         return bottomReached;
     }
@@ -45,6 +49,7 @@ bool collisionWithEnemy(float& xPosition, float& yPosition, int& playerWidth, in
     {
         xPosition = 500.f;
         xVelocity = 0;
+        enemyKilled = false;
         bottomReached = false;
         return true;
     }
@@ -58,6 +63,7 @@ bool collisionWithEnemy(float& xPosition, float& yPosition, int& playerWidth, in
     {
         xPosition = 500.f;
         xVelocity = 0;
+        enemyKilled = false;
         bottomReached = false;
         return true;
     }
@@ -353,7 +359,7 @@ int main(int argc, char* argv[])
     Uint64 lastEnemyFrameTime = SDL_GetTicks();
     int enemyFrameDelay = 100;
 
-
+    bool enemyKilled = false;
     bool onGround = false;
     bool spaceWasPressed = false;
     bool facingRight = true;
@@ -368,9 +374,10 @@ int main(int argc, char* argv[])
     float yMovingPlatformPosition = 560.f;
     float yMovingPlatformSpeed = 125.f;
     float yMovingPlatformDirection = 1;
-    
-    
+
+    Uint64 enemyTimer = 0.f;
     Uint64 previousTime = SDL_GetTicks();
+    
     bool bottomReached = false;
     while (gameLoop)
     {
@@ -559,6 +566,7 @@ int main(int argc, char* argv[])
         SDL_FRect rectKnight = { xPosition - cameraX, yPosition, 100.0f, 100.0f * scaleHeight};
         
         //enemy
+        
         SDL_GetTextureSize(enemyTexture, &width, &height);
         
 
@@ -577,14 +585,24 @@ int main(int argc, char* argv[])
 
         SDL_RenderTexture(renderer, enemyRunFrameForwards[currentFrameEnemy], NULL, &rectEnemyForwards);
         
-        if (collisionWithEnemy(xPosition, yPosition, playerWidth, playerHeight, xEnemyPosition, yEnemyPosition, xVelocity, yVelocity, bottomReached))
+        if (collisionWithEnemy(xPosition, yPosition, playerWidth, playerHeight, xEnemyPosition, yEnemyPosition, xVelocity, yVelocity, bottomReached, enemyKilled, enemyTimer))
         {
             cout << "Collided" << endl;
-            //xPosition = 500.f;
-            //yPosition = 5.f;
-
+           
+            
         }
 
+        if (enemyKilled == true)
+        {
+            Uint64 currentTimeCheck = SDL_GetTicks();
+
+            if (currentTimeCheck - enemyTimer >= 3000.f)
+            {
+                xEnemyPosition = 1800.f;
+                yEnemyPosition = 580.f;
+                enemyKilled = false;
+            }
+        }
 
         //Ground
         float groundWidth = screenWidth;
