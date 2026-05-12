@@ -9,10 +9,6 @@
 using namespace std;
 
 
-
-
-
-
 bool collisionWithEnemy(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& xEnemyPosition, float& yEnemyPosition, 
     float& xVelocity, float& yVelocity, bool& bottomReached, bool& enemyKilled, Uint64& enemyTimer)
 {
@@ -75,6 +71,7 @@ bool collisionWithEnemy(float& xPosition, float& yPosition, int& playerWidth, in
     return false;
     
 }
+
 bool collision(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& platformXPosition, 
                float& platformYPosition, float& yVelocity, bool& bottomReached, float screenWidth, float screenHeight, 
                float platformWidth, float platformHeight, float xVelocity, float yMovingPlatformDifference, 
@@ -224,6 +221,15 @@ int main(int argc, char* argv[])
     SDL_Surface* surfaceGround = IMG_Load("assets/ground.png");
     SDL_Surface* surfaceEnemy = IMG_Load("assets/enemy1.png");
 	SDL_Surface* surfaceRolling = IMG_Load("assets/rollRight1.png");
+    SDL_Surface* surfaceCoin = IMG_Load("assets/coin1.png");
+
+
+
+    if (!surfaceCoin)
+    {
+        cout << "Coin image failed: " << SDL_GetError() << endl;
+        return -1;
+    }
 
     if (!surfaceRolling)
     {
@@ -262,10 +268,12 @@ int main(int argc, char* argv[])
     }
 
 
+    SDL_Texture* coinTexture = SDL_CreateTextureFromSurface(renderer, surfaceCoin);
+    SDL_DestroySurface(surfaceCoin);
 
     SDL_Texture* rollingTexture = SDL_CreateTextureFromSurface(renderer, surfaceRolling);
+    SDL_SetTextureScaleMode(rollingTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
     SDL_DestroySurface(surfaceRolling);
-
 
     SDL_Texture* backgroundTexture = SDL_CreateTextureFromSurface(renderer, surfaceBackground);
     SDL_DestroySurface(surfaceBackground);
@@ -383,7 +391,7 @@ int main(int argc, char* argv[])
     float gravity = 1800.0f; //gravity strength and how much it pulls down
     float jumpStrength = -700.0f; //how high the player will jump
     float speed = 500.0f;
-    float rollingFrameDelay = 80.f;
+    float rollingFrameDelay = 100.f;
     float platformWidth = 200.f;
     float platformHeight = 50.f;
     float width;
@@ -410,6 +418,7 @@ int main(int argc, char* argv[])
 	Uint64 lastFrameTimeRolling = SDL_GetTicks();
     int enemyFrameDelay = 100;
 
+    bool wWasPressed = false;
     bool rolling = false;
     bool enemyKilled = false;
     bool onGround = false;
@@ -476,7 +485,7 @@ int main(int argc, char* argv[])
 
         //platform positions
         vector<float> platformXPositions = {450.f, xMovingPlatformPosition, 1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3200.f ,3800.f ,4300.f};
-        vector<float> platformYPositions = {650.f, 575.f , 450.f, 650.f, 650.f, 650.f, yMovingPlatformPosition, 550.f, 650.f, 650.f};
+        vector<float> platformYPositions = {650.f, 575.f , 450.f, 650.f, 650.f, 650.f, yMovingPlatformPosition, 550.f, 650.f, 625.f};
 
 
         while (SDL_PollEvent(&event))
@@ -510,11 +519,11 @@ int main(int argc, char* argv[])
         }
     
         
-        if (keys[SDL_SCANCODE_W] && xPosition > 0.f)
+        if (keys[SDL_SCANCODE_W] && xPosition > 0.f && moving )
         {
             rolling = true;
             moving = false;
-			
+            wWasPressed = keys[SDL_SCANCODE_W];
             if (facingRight)
             {
                 xVelocity = 0;
@@ -530,6 +539,8 @@ int main(int argc, char* argv[])
             xPosition += xVelocity * deltaTime;
         }
 
+        //if (w key is pressed AND not moving)
+        //then roll and move at the same time 
 
         if (keys[SDL_SCANCODE_SPACE] && onGround)
         {
@@ -566,7 +577,7 @@ int main(int argc, char* argv[])
 
         //knight roll
         SDL_GetTextureSize(rollingTexture, &width, &height);
-        SDL_FRect rollingKnight = { xPosition - cameraX, yPosition, 100.0f, 100.0f * scaleHeight };
+        SDL_FRect rollingKnight = { xPosition - cameraX, yPosition + 20, 80.0f, 100.0f  };
 
         if (rolling)
         {
@@ -738,11 +749,11 @@ int main(int argc, char* argv[])
         {
             if (facingRight)
             {
-                SDL_RenderTexture(renderer, rollingRightAnimation[currentFrameRolling], NULL, &rectKnight);
+                SDL_RenderTexture(renderer, rollingRightAnimation[currentFrameRolling], NULL, &rollingKnight);
             }
             else
             {
-                SDL_RenderTexture(renderer, rollingLeftAnimation[currentFrameRolling], NULL, &rectKnight);
+                SDL_RenderTexture(renderer, rollingLeftAnimation[currentFrameRolling], NULL, &rollingKnight);
             }
         }
         else
