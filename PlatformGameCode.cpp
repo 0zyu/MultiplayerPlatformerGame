@@ -222,6 +222,10 @@ int main(int argc, char* argv[])
     int frameDelay = 100; // milliseconds
     Uint64 lastFrameTime = SDL_GetTicks();
     Uint64 lastEnemyFrameTime = SDL_GetTicks();
+	int coinFrameDelay = 100;
+	int currentCoinFrame = 0;
+
+	Uint64 lastCoinFrameTime = SDL_GetTicks();
     Uint64 lastFrameTimeRolling = SDL_GetTicks();
     Uint64 enemyTimer = 0.f;
     Uint64 previousTime = SDL_GetTicks();
@@ -457,6 +461,18 @@ int main(int argc, char* argv[])
 
     }
 
+	const int numberOfCoinFrames = 8;
+    SDL_Texture* coins[numberOfCoinFrames];
+    for (int i = 0; i < 8; i++)
+    {
+        string filePath = "assets/coin" + to_string(i + 1) + ".png";
+        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+
+        coins[i] = SDL_CreateTextureFromSurface(renderer, tempSurface); //filled the array with texture surfaces
+        SDL_SetTextureScaleMode(coins[i], SDL_SCALEMODE_NEAREST);
+        SDL_DestroySurface(tempSurface);
+
+    }
 
     while (gameLoop)
     {
@@ -504,6 +520,9 @@ int main(int argc, char* argv[])
         vector<float> platformXPositions = { 450.f, xMovingPlatformPosition, 1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3200.f ,3800.f ,4300.f };
         vector<float> platformYPositions = { 650.f, 575.f , 450.f, 650.f, 650.f, 650.f, yMovingPlatformPosition, 550.f, 650.f, 650.f };
 
+        //coin positions
+		vector<float> coinXPositions = {525.f, 1575.f, 2075.f ,3275.f ,4375.f };
+		vector<float> coinYPositions = { 550.f, 350.f , 475.f, 475.f, 575.f };
 
         while (SDL_PollEvent(&event))
         {
@@ -590,7 +609,12 @@ int main(int argc, char* argv[])
             currentFrameEnemy = (currentFrameEnemy + 1) % 12;
             lastEnemyFrameTime = currentTime;
         }
-
+        
+        if (currentTime - lastCoinFrameTime >= coinFrameDelay)
+        {
+            currentCoinFrame = (currentCoinFrame + 1) % 8;
+            lastCoinFrameTime = currentTime;
+        }
 
         //knight roll
         SDL_GetTextureSize(rollingTexture, &width, &height);
@@ -684,6 +708,7 @@ int main(int argc, char* argv[])
         SDL_GetTextureSize(knightTexture, &width, &height);
         SDL_FRect rectKnight = { xPosition - cameraX, yPosition, 100.0f, 100.0f * scaleHeight };
 
+
         //enemy
         SDL_GetTextureSize(enemyTexture, &width, &height);
 
@@ -748,6 +773,20 @@ int main(int argc, char* argv[])
             SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatforms);
         }
 
+        
+
+        for (int i = 0; i < 5; i++)
+        {
+            //coin
+            SDL_GetTextureSize(coinTexture, &width, &height);
+            SDL_FRect rectCoins = { coinXPositions[i] - cameraX, coinYPositions[i], 45.0f, 45.0f * scaleHeight };
+            SDL_RenderTexture(renderer, coins[currentCoinFrame], NULL, &rectCoins);
+
+        }
+
+        
+        
+
         SDL_FRect textRect1 = { 50 - cameraX, 100.f, (float)textSurface1->w,(float)textSurface1->h };
         SDL_FRect textRect2 = { 50 - cameraX - 5, 95.f, (float)textSurface2->w,(float)textSurface2->h };
 
@@ -787,9 +826,15 @@ int main(int argc, char* argv[])
     {
         SDL_DestroyTexture(runFramesForwards[i]);
     }
+
     for (int i = 0; i < numberOfFramesForKnight; i++)
     {
         SDL_DestroyTexture(runFramesBackwards[i]);
+    }
+
+    for (int i = 0; i < 5; i++)
+    {
+        SDL_DestroyTexture(coins[i]);
     }
 
     SDL_DestroyTexture(rollingTexture);
