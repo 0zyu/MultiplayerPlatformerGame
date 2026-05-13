@@ -165,7 +165,6 @@ bool collision(float& xPosition, float& yPosition, int& playerWidth, int& player
 }
 
 
-
 int main(int argc, char* argv[])
 {
 
@@ -352,6 +351,7 @@ int main(int argc, char* argv[])
 
 
     SDL_Texture* coinTexture = SDL_CreateTextureFromSurface(renderer, surfaceCoin);
+    SDL_SetTextureScaleMode(coinTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
     SDL_DestroySurface(surfaceCoin);
 
     SDL_Texture* rollingTexture = SDL_CreateTextureFromSurface(renderer, surfaceRolling);
