@@ -1,8 +1,50 @@
+# Visual Studio
 .vs/
+*.vcxproj.user
+*.VC.db
+*.opendb
+*.suo
+
+# Build folders
 x64/
 Debug/
 Release/
+build/
+
+# Compiler / linker files
 *.obj
 *.exe
 *.pdb
 *.ilk
+*.lib
+*.exp
+
+# DLLs
+*.dll
+
+# Temporary files
+*.tmp
+*.log
+
+# Zip files
+*.zip
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# CMake (if you use it later)
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Visual Studio Code
+.vscode/
+
+# OneDrive temporary files
+*.tmp.drivedownload
+
+# Ignore generated binaries
+*.out
