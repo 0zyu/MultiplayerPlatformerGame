@@ -8,6 +8,53 @@
 
 using namespace std;
 
+bool collisionWithCoin(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& xCoinPosition, float& yCoinPosition,
+    float& xVelocity, float& yVelocity, bool& bottomReached, bool& coinCollected,  int& coinWidth, int& coinHeight, int& coinCount)
+{
+    float playerLeft = xPosition;
+    float playerRight = xPosition + playerWidth;
+    float playerBottom = yPosition + playerHeight;
+    float playerTop = yPosition;
+
+    float coinLeft = xCoinPosition;
+    float coinRight = xCoinPosition + coinWidth; 
+    float coinTop = yCoinPosition;
+    float coinBottom = yCoinPosition + coinHeight; 
+
+    int paddingValue = 5;
+    //Left side of coin
+    if (playerRight > coinLeft &&
+        playerLeft < coinLeft &&
+        playerTop <= coinBottom &&
+        playerBottom >= coinTop)
+    {
+        coinCount += 1;
+        coinCollected = true;
+        return coinCollected;
+	}
+    //Right side of coin
+    else if (playerRight > coinRight && 
+             playerLeft < coinRight && 
+             playerTop <= coinBottom &&
+             playerBottom >= coinTop)
+    {
+        coinCount += 1;
+        coinCollected = true;
+        return coinCollected;
+    }
+    //Top of coin
+    else if (playerBottom >= coinTop &&
+             playerBottom <= coinTop + paddingValue &&
+             playerRight > coinLeft + paddingValue &&
+             playerLeft < coinRight - paddingValue)
+    {
+        coinCount += 1;
+        coinCollected = true;
+        return coinCollected;
+    }
+	
+    return false;
+}
 
 bool collisionWithEnemy(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& xEnemyPosition, float& yEnemyPosition,
     float& xVelocity, float& yVelocity, bool& bottomReached, bool& enemyKilled, Uint64& enemyTimer, int& enemyWidth, int& enemyHeight)
@@ -170,7 +217,7 @@ int main(int argc, char* argv[])
 
 
     //Player variables
-    float xPosition = 500.f;
+    float xPosition = 5.f;
     float yPosition = 5.f;
     float xVelocity = 0.f; //how fast the player moves in the X Direction
     float yVelocity = 0.f; //how fast its falling/moving in Y direction
@@ -183,7 +230,6 @@ int main(int argc, char* argv[])
     float speed = 500.0f;
     
     //Camera variables
-
     float screenWidth = 1500;
     float screenHeight = 800;
     float scrollX = 0;
@@ -239,11 +285,11 @@ int main(int argc, char* argv[])
 
     
 	//Moving platform variables
-    float xMovingPlatformPosition = 700.f;
-    float xMovingPlatformSpeed = 150.f;
+    float xMovingPlatformPosition = 1300.f;
+    float xMovingPlatformSpeed = 200.f;
     float xMovingPlatformDirection = 1;
     float yMovingPlatformPosition = 560.f;
-    float yMovingPlatformSpeed = 125.f;
+    float yMovingPlatformSpeed = 200.f;
     float yMovingPlatformDirection = 1;
 
     //Surfaces
@@ -269,6 +315,13 @@ int main(int argc, char* argv[])
 
     //Ground coordinates
 	float groundY = 750.f;
+
+	//Coin variables
+    int coinWidth = 45;
+	int coinHeight = 54;
+	bool coinCollected = false;
+	Uint64 coinTimer = 0.f;
+	int coinCount = 0; 
 
     // Init SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) //starts SDLs video system so i can create a window and draw the graphics, if it fails then print that
@@ -476,6 +529,10 @@ int main(int argc, char* argv[])
 
     }
 
+    //coin positions
+    vector<float> coinXPositions = { 525.f, 1575.f, 2075.f ,3275.f ,4375.f };
+    vector<float> coinYPositions = { 550.f, 350.f , 475.f, 475.f, 575.f };
+
     while (gameLoop)
     {
         Uint64 currentTime = SDL_GetTicks();
@@ -521,10 +578,6 @@ int main(int argc, char* argv[])
         //platform positions
         vector<float> platformXPositions = { 450.f, xMovingPlatformPosition, 1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3200.f ,3800.f ,4300.f };
         vector<float> platformYPositions = { 650.f, 575.f , 450.f, 650.f, 650.f, 650.f, yMovingPlatformPosition, 550.f, 650.f, 650.f };
-
-        //coin positions
-		vector<float> coinXPositions = {525.f, 1575.f, 2075.f ,3275.f ,4375.f };
-		vector<float> coinYPositions = { 550.f, 350.f , 475.f, 475.f, 575.f };
 
         while (SDL_PollEvent(&event))
         {
@@ -732,6 +785,7 @@ int main(int argc, char* argv[])
 
         collisionWithEnemy(xPosition, yPosition, playerWidth, playerHeight, xEnemyPosition, yEnemyPosition, xVelocity, yVelocity, bottomReached, enemyKilled, enemyTimer, enemyWidth, enemyHeight);
 
+
         if (enemyKilled == true)
         {
             Uint64 currentTimeCheck = SDL_GetTicks();
@@ -744,6 +798,18 @@ int main(int argc, char* argv[])
             }
         }
 
+
+        //Coin
+        for (int i = 0; i < 5; i++)
+        {
+
+            if (collisionWithCoin(xPosition, yPosition, playerWidth, playerHeight, coinXPositions[i], coinYPositions[i], xVelocity, yVelocity, bottomReached, coinCollected, coinWidth, coinHeight, coinCount))
+            {
+				cout << coinCount << endl;
+				coinYPositions[i] = 2000.f; //moves coin off screen
+            }
+
+        }
         //Ground
         float groundWidth = screenWidth;
         float groundHeight = 80.f;
@@ -854,5 +920,5 @@ int main(int argc, char* argv[])
     TTF_Quit();
     SDL_Quit();
 
-    return 0;
+
 }
