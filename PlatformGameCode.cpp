@@ -437,6 +437,8 @@ int main(int argc, char* argv[])
         SDL_DestroySurface(tempSurface);
     }
 
+
+    //commit check
     //sprite animation for going backwards
 
     SDL_Texture* runFramesBackwards[numberOfFramesForKnight];
