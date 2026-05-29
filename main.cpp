@@ -217,7 +217,7 @@ int main(int argc, char* argv[])
 
 
     //Player variables
-    float xPosition = 5.f; //was 5
+    float xPosition = 5000.f; //was 5
     float yPosition = 5.f;
     float xVelocity = 0.f; //how fast the player moves in the X Direction
     float yVelocity = 0.f; //how fast its falling/moving in Y direction
@@ -304,7 +304,7 @@ int main(int argc, char* argv[])
     SDL_Surface* surfaceEnemy = IMG_Load("assets/enemy1.png");
     SDL_Surface* surfaceRolling = IMG_Load("assets/rollRight1.png");
     SDL_Surface* surfaceCoin = IMG_Load("assets/coin1.png");
-    SDL_Surface* surfaceFlag = IMG_Load("assets/flag1.png");
+    SDL_Surface* surfaceFlag = IMG_Load("assets/betterflag1.png");
 
 
     //Text colours
@@ -553,11 +553,11 @@ int main(int argc, char* argv[])
 
 
 
-    const int numberOfFlagFrames = 5;
+    const int numberOfFlagFrames = 6;
     SDL_Texture* flags[numberOfFlagFrames];
     for (int i = 0; i < numberOfFlagFrames; i++)
     {
-        string filePath = "assets/flag" + to_string(i + 1) + ".png";
+        string filePath = "assets/betterflag" + to_string(i + 1) + ".png";
         SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
 
         flags[i] = SDL_CreateTextureFromSurface(renderer, tempSurface); //filled the array with texture surfaces
@@ -566,7 +566,7 @@ int main(int argc, char* argv[])
 
     }
     int currentFlagFrame = 0;
-    int flagFrameDelay = 200;
+    int flagFrameDelay = 250;
     Uint64 lastFlagFrameTime = SDL_GetTicks();
 
     while (gameLoop)
@@ -711,7 +711,7 @@ int main(int argc, char* argv[])
         //flag
         if (currentTime - lastFlagFrameTime >= flagFrameDelay)
         {
-            currentFlagFrame = (currentFlagFrame + 1) % 5;
+            currentFlagFrame = (currentFlagFrame + 1) % numberOfFlagFrames;
             lastFlagFrameTime = currentTime;
         }
 
