@@ -8,6 +8,33 @@
 
 using namespace std;
 
+bool collisionWithFlag(float xPosition, float yPosition, int playerWidth, int playerHeight,
+    float flagX, float flagY, int flagWidth, int flagHeight)
+{
+    float playerLeft = xPosition;
+    float playerRight = xPosition + playerWidth;
+    float playerTop = yPosition;
+    float playerBottom = yPosition + playerHeight;
+
+    float flagLeft = flagX;
+    float flagRight = flagX + flagWidth;
+    float flagTop = flagY;
+    float flagBottom = flagY + flagHeight;
+
+    if (playerRight > flagLeft &&
+        playerLeft < flagRight &&
+        playerBottom > flagTop &&
+        playerTop < flagBottom)
+    {
+        
+        return true;
+    }
+
+    return false;
+}
+
+
+
 bool collisionWithCoin(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& xCoinPosition, float& yCoinPosition,
     float& xVelocity, float& yVelocity, bool& bottomReached, bool& coinCollected,  int& coinWidth, int& coinHeight, int& coinCount)
 {
@@ -217,7 +244,7 @@ int main(int argc, char* argv[])
 
 
     //Player variables
-    float xPosition = 5000.f; //was 5
+    float xPosition = 5.f; //was 5
     float yPosition = 5.f;
     float xVelocity = 0.f; //how fast the player moves in the X Direction
     float yVelocity = 0.f; //how fast its falling/moving in Y direction
@@ -295,6 +322,7 @@ int main(int argc, char* argv[])
     //flag variables
     float flagX = 5400.f;
     float flagY = 450.f;
+    bool levelCompleted = false;
 
     //Surfaces
     SDL_Surface* surfaceKnight = IMG_Load("assets/knightSprite1.png");
@@ -447,11 +475,18 @@ int main(int argc, char* argv[])
     SDL_SetTextureScaleMode(groundTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
     SDL_DestroySurface(surfaceGround);
 
+
     SDL_Surface* textSurface1 = TTF_RenderText_Blended(font, "Knight Jump!", 0, primaryColour);
     SDL_Surface* textSurface2 = TTF_RenderText_Blended(font, "Knight Jump!", 0, secondaryColour);
+    SDL_Surface* textSurface3 = TTF_RenderText_Blended(font, "Level Complete!", 0, primaryColour);
+    SDL_Surface* textSurface4 = TTF_RenderText_Blended(font, "Level Complete!", 0, secondaryColour);
+
 
     SDL_Texture* textTexture1 = SDL_CreateTextureFromSurface(renderer, textSurface1);
     SDL_Texture* textTexture2 = SDL_CreateTextureFromSurface(renderer, textSurface2);
+    SDL_Texture* textTexture3 = SDL_CreateTextureFromSurface(renderer, textSurface3);
+    SDL_Texture* textTexture4 = SDL_CreateTextureFromSurface(renderer, textSurface4);
+
     const bool* keys = SDL_GetKeyboardState(NULL);
 
     const int numberOfFramesForKnight = 8;
@@ -575,7 +610,7 @@ int main(int argc, char* argv[])
         float deltaTime = (currentTime - previousTime) / 1000.0f; //the time between the last frame and the current frame in seconds
         previousTime = currentTime;
 
-        
+
 
         float previousXMovingPlatformPosition = xMovingPlatformPosition; //gets the last position from the last frame, because after this line the position gets updated 
 
@@ -629,42 +664,44 @@ int main(int argc, char* argv[])
 
         bool moving = false;
         xVelocity = 0;
-
-        if (keys[SDL_SCANCODE_D])
+    
+        if (levelCompleted == false)
         {
-            xVelocity = speed;
-            xPosition += xVelocity * deltaTime;
-            facingRight = true;
-            moving = true;
-        }
-
-        if (keys[SDL_SCANCODE_A] && xPosition > 0.f)
-        {
-            xVelocity = -speed;
-            xPosition += xVelocity * deltaTime;
-            facingRight = false;
-            moving = true;
-        }
-
-
-        if (keys[SDL_SCANCODE_W] && xPosition > 0.f && moving)
-        {
-            rolling = true;
-            moving = false;
-            wWasPressed = keys[SDL_SCANCODE_W];
-            if (facingRight)
+            if (keys[SDL_SCANCODE_D])
             {
-                xVelocity = 0;
-                xVelocity += speed * deltaTime;
-            }
-            else
-            {
-
-                xVelocity = 0;
-                xVelocity += -speed * deltaTime;
+                xVelocity = speed;
+                xPosition += xVelocity * deltaTime;
+                facingRight = true;
+                moving = true;
             }
 
-            xPosition += xVelocity * deltaTime;
+            if (keys[SDL_SCANCODE_A] && xPosition > 0.f)
+            {
+                xVelocity = -speed;
+                xPosition += xVelocity * deltaTime;
+                facingRight = false;
+                moving = true;
+            }
+
+
+            if (keys[SDL_SCANCODE_W] && xPosition > 0.f && moving)
+            {
+                rolling = true;
+                moving = false;
+                wWasPressed = keys[SDL_SCANCODE_W];
+                if (facingRight)
+                {
+                    xVelocity = 0;
+                    xVelocity += speed * deltaTime;
+                }
+                else
+                {
+
+                    xVelocity = 0;
+                    xVelocity += -speed * deltaTime;
+                }
+
+                xPosition += xVelocity * deltaTime;
         }
 
         //if (w key is pressed AND not moving)
@@ -676,7 +713,7 @@ int main(int argc, char* argv[])
             onGround = false;
             bottomReached = false;
         }
-
+    }
 
         if (moving)
         {
@@ -709,12 +746,14 @@ int main(int argc, char* argv[])
         }
 
         //flag
-        if (currentTime - lastFlagFrameTime >= flagFrameDelay)
+        if (levelCompleted == false)
         {
-            currentFlagFrame = (currentFlagFrame + 1) % numberOfFlagFrames;
-            lastFlagFrameTime = currentTime;
+            if (currentTime - lastFlagFrameTime >= flagFrameDelay)
+            {
+                currentFlagFrame = (currentFlagFrame + 1) % numberOfFlagFrames;
+                lastFlagFrameTime = currentTime;
+            }
         }
-
         //knight roll
         SDL_GetTextureSize(rollingTexture, &width, &height);
         SDL_FRect rollingKnight = { xPosition - cameraX, yPosition + 20, 80.0f, 100.0f };
@@ -760,6 +799,18 @@ int main(int argc, char* argv[])
                 break;
             }
         }
+
+        SDL_FRect textRect3 = { 50 - cameraX - 5, 200.f, (float)textSurface3->w,(float)textSurface3->h };
+
+        if (collisionWithFlag(xPosition, yPosition, playerWidth, playerHeight,
+            flagX, flagY, 150, 300) && levelCompleted == false)
+        {
+            
+            cout << "You win!" << endl;
+            levelCompleted = true;
+
+        }
+
 
         //touching ground separate from collision detection because it allows all platforms to be collided with, not just the first few 
         if (yPosition + playerHeight >= groundY)
@@ -907,10 +958,37 @@ int main(int argc, char* argv[])
         
 
         SDL_FRect textRect1 = { 50 - cameraX, 100.f, (float)textSurface1->w,(float)textSurface1->h };
-        SDL_FRect textRect2 = { 50 - cameraX - 5, 95.f, (float)textSurface2->w,(float)textSurface2->h };
+        SDL_FRect textRect2 = { 50 - cameraX - 5, 95.f, (float)textSurface2->w,(float)textSurface2->h }; 
+        
+
+
 
         SDL_RenderTexture(renderer, textTexture2, NULL, &textRect2);
         SDL_RenderTexture(renderer, textTexture1, NULL, &textRect1);
+
+        if (levelCompleted)
+        {
+
+            SDL_FRect textRect3 =
+            {
+                (screenWidth - textSurface3->w) / 2.0f,
+                150.f,
+                (float)textSurface3->w,
+                (float)textSurface3->h
+            };
+
+            SDL_FRect textRect4 =
+            {
+                ((screenWidth - textSurface4->w) / 2.0f) - 5.f,
+                145.f,
+                (float)textSurface4->w,
+                (float)textSurface4->h
+            };
+            SDL_RenderTexture(renderer, textTexture4, NULL, &textRect4);
+
+            SDL_RenderTexture(renderer, textTexture3, NULL, &textRect3);
+            
+        }
 
         if (rolling)
         {
@@ -955,17 +1033,28 @@ int main(int argc, char* argv[])
     {
         SDL_DestroyTexture(coins[i]);
     }
-
-    for (int i = 0; i < 5; i++)
+    if (levelCompleted == false)
     {
-        SDL_DestroyTexture(flags[i]);
+        for (int i = 0; i < 5; i++)
+        {
+            SDL_DestroyTexture(flags[i]);
+        }
     }
 
     SDL_DestroyTexture(rollingTexture);
+
+    SDL_DestroyTexture(textTexture4);
+    SDL_DestroySurface(textSurface4);
+
+    SDL_DestroyTexture(textTexture3);
+    SDL_DestroySurface(textSurface3);
+
     SDL_DestroyTexture(textTexture2);
     SDL_DestroySurface(textSurface2);
+
     SDL_DestroyTexture(textTexture1);
     SDL_DestroySurface(textSurface1);
+
     TTF_CloseFont(font);
     SDL_DestroyTexture(enemyTexture);
     SDL_DestroyTexture(groundTexture);
