@@ -309,7 +309,7 @@ int main(int argc, char* argv[])
     bool spaceWasPressed = false;
     bool facingRight = true;
     bool gameLoop = true;
-
+    bool gameStarted = false;
     
 	//Moving platform variables
     float xMovingPlatformPosition = 1300.f;
@@ -475,17 +475,28 @@ int main(int argc, char* argv[])
     SDL_SetTextureScaleMode(groundTexture, SDL_SCALEMODE_NEAREST); //unblurs the image and doesnt do any filtering etc
     SDL_DestroySurface(surfaceGround);
 
+    //text
 
+
+    
     SDL_Surface* textSurface1 = TTF_RenderText_Blended(font, "Knight Jump!", 0, primaryColour);
     SDL_Surface* textSurface2 = TTF_RenderText_Blended(font, "Knight Jump!", 0, secondaryColour);
     SDL_Surface* textSurface3 = TTF_RenderText_Blended(font, "Level Complete!", 0, primaryColour);
     SDL_Surface* textSurface4 = TTF_RenderText_Blended(font, "Level Complete!", 0, secondaryColour);
-
+    SDL_Surface* textSurface5 = TTF_RenderText_Blended(font, "Press SPACE to Start", 0, secondaryColour);
+    SDL_Surface* textSurface6 = TTF_RenderText_Blended(font, "Coins: ", 0, primaryColour);
+    
 
     SDL_Texture* textTexture1 = SDL_CreateTextureFromSurface(renderer, textSurface1);
     SDL_Texture* textTexture2 = SDL_CreateTextureFromSurface(renderer, textSurface2);
     SDL_Texture* textTexture3 = SDL_CreateTextureFromSurface(renderer, textSurface3);
     SDL_Texture* textTexture4 = SDL_CreateTextureFromSurface(renderer, textSurface4);
+    SDL_Texture* textTexture5 = SDL_CreateTextureFromSurface(renderer, textSurface5);
+    SDL_Texture* textTexture6 = SDL_CreateTextureFromSurface(renderer, textSurface6);
+    
+    string coinText = "Coins: " + to_string(coinCount);
+    SDL_Surface* textSurface7 = TTF_RenderText_Blended(font, coinText.c_str(), 0, primaryColour);
+    SDL_Texture* textTexture7 = SDL_CreateTextureFromSurface(renderer, textSurface7);
 
     const bool* keys = SDL_GetKeyboardState(NULL);
 
@@ -665,7 +676,7 @@ int main(int argc, char* argv[])
         bool moving = false;
         xVelocity = 0;
     
-        if (levelCompleted == false)
+        if (levelCompleted == false && gameStarted == true)
         {
             if (keys[SDL_SCANCODE_D])
             {
@@ -800,6 +811,7 @@ int main(int argc, char* argv[])
             }
         }
 
+        
         SDL_FRect textRect3 = { 50 - cameraX - 5, 200.f, (float)textSurface3->w,(float)textSurface3->h };
 
         if (collisionWithFlag(xPosition, yPosition, playerWidth, playerHeight,
@@ -832,6 +844,7 @@ int main(int argc, char* argv[])
         //must render stuff after this
 
 
+        
 
         float backgroundWidth = screenWidth;
         float backgroundHeight = screenHeight;
@@ -898,10 +911,20 @@ int main(int argc, char* argv[])
         for (int i = 0; i < 5; i++)
         {
 
-            if (collisionWithCoin(xPosition, yPosition, playerWidth, playerHeight, coinXPositions[i], coinYPositions[i], xVelocity, yVelocity, bottomReached, coinCollected, coinWidth, coinHeight, coinCount))
+            if (collisionWithCoin(xPosition, yPosition, playerWidth, playerHeight,
+                coinXPositions[i], coinYPositions[i],
+                xVelocity, yVelocity, bottomReached,
+                coinCollected, coinWidth, coinHeight, coinCount))
             {
-				cout << coinCount << endl;
-				coinYPositions[i] = 2000.f; //moves coin off screen
+                coinYPositions[i] = 2000.f;
+
+                SDL_DestroyTexture(textTexture7);
+                SDL_DestroySurface(textSurface7);
+
+                coinText = "Coins: " + to_string(coinCount);
+
+                textSurface7 = TTF_RenderText_Blended(font, coinText.c_str(), 0, primaryColour);
+                textTexture7 = SDL_CreateTextureFromSurface(renderer, textSurface7);
             }
 
         }
@@ -928,6 +951,9 @@ int main(int argc, char* argv[])
         {
             groundScrollX += groundWidth;
         }
+
+        SDL_FRect textRect7 = { screenWidth - 500 , 10.f, (float)textSurface3->w/3, (float)textSurface7->h/2 };
+        SDL_RenderTexture(renderer, textTexture7, NULL, &textRect7);
 
         //We need two grounds because one isnt enough, 
         SDL_FRect ground1 = { -groundScrollX, groundY, groundWidth, groundHeight };
@@ -956,34 +982,42 @@ int main(int argc, char* argv[])
 
         
         
+        //ben
+        if (gameStarted == false)
+        {
 
-        SDL_FRect textRect1 = { 50 - cameraX, 100.f, (float)textSurface1->w,(float)textSurface1->h };
-        SDL_FRect textRect2 = { 50 - cameraX - 5, 95.f, (float)textSurface2->w,(float)textSurface2->h }; 
+            SDL_FRect textRect1 = { -450 - cameraX, 100.f, (float)textSurface1->w,(float)textSurface1->h };
+            SDL_FRect textRect2 = { -450 - cameraX - 5, 95.f, (float)textSurface2->w,(float)textSurface2->h }; 
+            SDL_FRect textRect5 = { -375 - cameraX - 5, 300.f, (float)textSurface5->w/2,(float)textSurface5->h/2 };
+
+
+
+
+            SDL_RenderTexture(renderer, textTexture2, NULL, &textRect2);
+            SDL_RenderTexture(renderer, textTexture1, NULL, &textRect1);
+            SDL_RenderTexture(renderer, textTexture5, NULL, &textRect5);
+
+            if (keys[SDL_SCANCODE_SPACE])
+            {
+                gameStarted = true;
+               
+            }
+        }
         
-
-
-
-        SDL_RenderTexture(renderer, textTexture2, NULL, &textRect2);
-        SDL_RenderTexture(renderer, textTexture1, NULL, &textRect1);
 
         if (levelCompleted)
         {
 
             SDL_FRect textRect3 =
             {
-                (screenWidth - textSurface3->w) / 2.0f,
-                150.f,
-                (float)textSurface3->w,
-                (float)textSurface3->h
+                (screenWidth - textSurface3->w) / 2.0f, 150.f, (float)textSurface3->w, (float)textSurface3->h
             };
 
             SDL_FRect textRect4 =
-            {
-                ((screenWidth - textSurface4->w) / 2.0f) - 5.f,
-                145.f,
-                (float)textSurface4->w,
-                (float)textSurface4->h
+            { 
+                ((screenWidth - textSurface4->w) / 2.0f) - 5.f, 145.f, (float)textSurface4->w, (float)textSurface4->h
             };
+
             SDL_RenderTexture(renderer, textTexture4, NULL, &textRect4);
 
             SDL_RenderTexture(renderer, textTexture3, NULL, &textRect3);
@@ -1018,6 +1052,13 @@ int main(int argc, char* argv[])
 
     }
 
+    SDL_FRect textRect7 =
+    {
+        screenWidth - textSurface7->w - 30.f, 30.f, (float)textSurface7->w, (float)textSurface7->h
+    };
+
+    SDL_RenderTexture(renderer, textTexture7, NULL, &textRect7);
+
 
     for (int i = 0; i < numberOfFramesForKnight; i++)
     {
@@ -1042,6 +1083,12 @@ int main(int argc, char* argv[])
     }
 
     SDL_DestroyTexture(rollingTexture);
+
+    SDL_DestroyTexture(textTexture7);
+    SDL_DestroySurface(textSurface7);
+
+    SDL_DestroyTexture(textTexture5);
+    SDL_DestroySurface(textSurface5);
 
     SDL_DestroyTexture(textTexture4);
     SDL_DestroySurface(textSurface4);
