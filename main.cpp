@@ -4,239 +4,9 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <string>
 #include <vector>
-
+#include "Collision.h"
 
 using namespace std;
-
-bool collisionWithFlag(float xPosition, float yPosition, int playerWidth, int playerHeight,
-    float flagX, float flagY, int flagWidth, int flagHeight)
-{
-    float playerLeft = xPosition;
-    float playerRight = xPosition + playerWidth;
-    float playerTop = yPosition;
-    float playerBottom = yPosition + playerHeight;
-
-    float flagLeft = flagX;
-    float flagRight = flagX + flagWidth;
-    float flagTop = flagY;
-    float flagBottom = flagY + flagHeight;
-
-    if (playerRight > flagLeft &&
-        playerLeft < flagRight &&
-        playerBottom > flagTop &&
-        playerTop < flagBottom)
-    {
-        
-        return true;
-    }
-
-    return false;
-}
-
-
-
-bool collisionWithCoin(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& xCoinPosition, float& yCoinPosition,
-    float& xVelocity, float& yVelocity, bool& bottomReached, bool& coinCollected,  int& coinWidth, int& coinHeight, int& coinCount)
-{
-    float playerLeft = xPosition;
-    float playerRight = xPosition + playerWidth;
-    float playerBottom = yPosition + playerHeight;
-    float playerTop = yPosition;
-
-    float coinLeft = xCoinPosition;
-    float coinRight = xCoinPosition + coinWidth; 
-    float coinTop = yCoinPosition;
-    float coinBottom = yCoinPosition + coinHeight; 
-
-    int paddingValue = 5;
-    //Left side of coin
-    if (playerRight > coinLeft &&
-        playerLeft < coinLeft &&
-        playerTop <= coinBottom &&
-        playerBottom >= coinTop)
-    {
-        coinCount += 1;
-        coinCollected = true;
-        return coinCollected;
-	}
-    //Right side of coin
-    else if (playerRight > coinRight && 
-             playerLeft < coinRight && 
-             playerTop <= coinBottom &&
-             playerBottom >= coinTop)
-    {
-        coinCount += 1;
-        coinCollected = true;
-        return coinCollected;
-    }
-    //Top of coin
-    else if (playerBottom >= coinTop &&
-             playerBottom <= coinTop + paddingValue &&
-             playerRight > coinLeft + paddingValue &&
-             playerLeft < coinRight - paddingValue)
-    {
-        coinCount += 1;
-        coinCollected = true;
-        return coinCollected;
-    }
-	
-    return false;
-}
-
-bool collisionWithEnemy(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& xEnemyPosition, float& yEnemyPosition,
-    float& xVelocity, float& yVelocity, bool& bottomReached, bool& enemyKilled, Uint64& enemyTimer, int& enemyWidth, int& enemyHeight)
-{
-    float playerLeft = xPosition;
-    float playerRight = xPosition + playerWidth;
-    float playerBottom = yPosition + playerHeight;
-    float playerTop = yPosition;
-
-    float enemyLeft = xEnemyPosition;
-    float enemyRight = xEnemyPosition + enemyWidth; 
-    float enemyTop = yEnemyPosition;
-    float enemyBottom = yEnemyPosition + enemyHeight; 
-
-    int paddingValue = 20; //Makes the collision feel more fair as sprites have empty space around them
-    //need to do top, right, and left of the enemy, exact same as platform logic but without the bottom
-
-    //landing on top of enemy
-    if (playerBottom >= enemyTop &&
-        playerBottom <= enemyTop + paddingValue &&
-        playerRight > enemyLeft + paddingValue &&
-        playerLeft < enemyRight - paddingValue &&
-        yVelocity >= 0
-        )
-    {
-        //yPosition = enemyTop - playerHeight;
-        yEnemyPosition = 2000.f; //moves enemy off screen instead of deleting it, because deleting it would cause problems with the animation frames and texture rendering etc
-
-        enemyTimer = SDL_GetTicks(); //starts the timer for when the enemy is killed, so that after a certain time it can respawn
-        enemyKilled = true;
-        bottomReached = true;
-        return bottomReached;
-    }
-
-    //left side of enemy hit
-    else if (playerRight > enemyLeft &&
-        playerLeft < enemyLeft &&
-        playerTop <= enemyBottom &&
-        playerBottom >= enemyTop &&
-        xVelocity >= 0)
-    {
-        xPosition = 500.f;
-        xVelocity = 0;
-        enemyKilled = false;
-        bottomReached = false;
-        return true;
-    }
-
-    //right side of enemy hit
-    else if (playerLeft < enemyRight &&
-        playerRight > enemyRight &&
-        playerTop <= enemyBottom &&
-        playerBottom >= enemyTop &&
-        xVelocity <= 0)
-    {
-        xPosition = 500.f;
-        xVelocity = 0;
-        enemyKilled = false;
-        bottomReached = false;
-        return true;
-    }
-    return false;
-
-}
-
-bool collision(float& xPosition, float& yPosition, int& playerWidth, int& playerHeight, float& platformXPosition,
-    float& platformYPosition, float& yVelocity, bool& bottomReached, float screenWidth, float screenHeight,
-    float platformWidth, float platformHeight, float xVelocity, float yMovingPlatformDifference,
-    float xMovingPlatformDifference, int i, int xMovingPlatformDirection)
-{
-
-    float playerLeft = xPosition;
-    float playerRight = xPosition + playerWidth;
-    float playerBottom = yPosition + playerHeight;
-    float playerTop = yPosition;
-
-    float platformLeft = platformXPosition;
-    float platformRight = platformXPosition + platformWidth;
-    float platformTop = platformYPosition;
-    float platformBottom = platformYPosition + platformHeight;
-
-    int paddingValue = 20;
-
-    //Landing on platform
-    if (playerBottom >= platformTop &&
-        playerBottom <= platformTop + paddingValue && 
-        playerRight > platformLeft &&
-        playerLeft < platformRight &&
-        yVelocity >= 0)
-    {
-        if (i != 6)
-        {
-
-            yPosition = platformTop - playerHeight;
-            yVelocity = 0;
-        }
-        if (i == 1)
-        {
-            xPosition += xMovingPlatformDifference; //Adds the difference between the two platform positions to the player position so it can move with the platform
-        }
-
-        if (i == 6)
-        {
-            yPosition += yMovingPlatformDifference;
-        }
-        bottomReached = true;
-        return bottomReached;
-    }
-
-    //Hitting bottom of platform
-    else if (playerTop <= platformBottom &&
-        playerTop >= platformBottom - paddingValue &&
-        playerRight > platformLeft &&
-        playerLeft < platformRight &&
-        yVelocity <= 0)
-    {
-        yPosition = platformBottom + playerHeight;
-        yVelocity = 0.0f;
-        bottomReached = true;
-        return bottomReached;
-    }
-    //Hitting left side of platform
-    else if (xVelocity > 0 &&
-        playerRight > platformLeft &&
-        playerLeft < platformLeft &&
-        playerTop < platformBottom &&
-        playerBottom > platformTop
-        )
-    {
-        xPosition = platformLeft - playerWidth;
-        xVelocity = 0;
-        bottomReached = false;
-        return true;
-    }
-    //Hitting right side of platform
-    else if (xVelocity < 0 &&
-        playerRight > platformRight &&
-        playerLeft < platformRight &&
-        playerTop < platformBottom &&
-        playerBottom > platformTop
-        )
-    {
-        xPosition = platformRight;
-        xVelocity = 0;
-        bottomReached = false;
-        return true;
-    }
-
-    else
-    {
-        bottomReached = false;
-        return bottomReached;
-    }
-    i++;
-}
 
 
 int main(int argc, char* argv[])
@@ -255,7 +25,7 @@ int main(int argc, char* argv[])
     float gravity = 1800.0f; //gravity strength and how much it pulls down
     float jumpStrength = -700.0f; //how high the player will jump
     float speed = 500.0f;
-    
+
     //Camera variables
     float screenWidth = 1500;
     float screenHeight = 800;
@@ -267,19 +37,19 @@ int main(int argc, char* argv[])
     int currentFrameEnemy = 0;
     int currentFrameRolling = 0;
 
-	//Platform variables
+    //Platform variables
     bool bottomReached = false;
     float platformWidth = 200.f;
     float platformHeight = 50.f;
     int numberOfPlatforms = 10;
 
-	//Texture variables
+    //Texture variables
     float width;
     float height;
     float scaleHeight = 1.2f; //just to stretch the image out vertically a bit
     float scaleWidth = 1.2f; //just to stretch the image out horizontally a bit
-    
-	//Enemy variables
+
+    //Enemy variables
     int enemyFrameDelay = 100;
     int enemyDirection = 1;
     int enemyWidth = 80;
@@ -289,20 +59,20 @@ int main(int argc, char* argv[])
     float enemySpeed = 100.0f;
     bool enemyKilled = false;
 
-	//Timer/Frame variables
+    //Timer/Frame variables
     int i = 0;
     int frameDelay = 100; // milliseconds
     Uint64 lastFrameTime = SDL_GetTicks();
     Uint64 lastEnemyFrameTime = SDL_GetTicks();
-	int coinFrameDelay = 100;
-	int currentCoinFrame = 0;
+    int coinFrameDelay = 100;
+    int currentCoinFrame = 0;
 
-	Uint64 lastCoinFrameTime = SDL_GetTicks();
+    Uint64 lastCoinFrameTime = SDL_GetTicks();
     Uint64 lastFrameTimeRolling = SDL_GetTicks();
     Uint64 enemyTimer = 0.f;
     Uint64 previousTime = SDL_GetTicks();
 
-	//Input variables
+    //Input variables
     bool wWasPressed = false;
     bool rolling = false;
     bool onGround = false;
@@ -310,8 +80,8 @@ int main(int argc, char* argv[])
     bool facingRight = true;
     bool gameLoop = true;
     bool gameStarted = false;
-    
-	//Moving platform variables
+
+    //Moving platform variables
     float xMovingPlatformPosition = 1300.f;
     float xMovingPlatformSpeed = 200.f;
     float xMovingPlatformDirection = 1;
@@ -341,21 +111,21 @@ int main(int argc, char* argv[])
 
     SDL_Event event;
 
-	//Platform limits
+    //Platform limits
     float platformLimitLeft = 700.f;
     float platformLimitRight = 1300.f;
     float platformLimitTop = 250.f;
     float platformLimitBottom = 650.f;
 
     //Ground coordinates
-	float groundY = 750.f;
+    float groundY = 750.f;
 
-	//Coin variables
+    //Coin variables
     int coinWidth = 45;
-	int coinHeight = 54;
-	bool coinCollected = false;
-	Uint64 coinTimer = 0.f;
-	int coinCount = 0; 
+    int coinHeight = 54;
+    bool coinCollected = false;
+    Uint64 coinTimer = 0.f;
+    int coinCount = 0;
 
     // Init SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) //starts SDLs video system so i can create a window and draw the graphics, if it fails then print that
@@ -478,14 +248,14 @@ int main(int argc, char* argv[])
     //text
 
 
-    
+
     SDL_Surface* textSurface1 = TTF_RenderText_Blended(font, "Knight Jump!", 0, primaryColour);
     SDL_Surface* textSurface2 = TTF_RenderText_Blended(font, "Knight Jump!", 0, secondaryColour);
     SDL_Surface* textSurface3 = TTF_RenderText_Blended(font, "Level Complete!", 0, primaryColour);
     SDL_Surface* textSurface4 = TTF_RenderText_Blended(font, "Level Complete!", 0, secondaryColour);
     SDL_Surface* textSurface5 = TTF_RenderText_Blended(font, "Press SPACE to Start", 0, secondaryColour);
     SDL_Surface* textSurface6 = TTF_RenderText_Blended(font, "Coins: ", 0, primaryColour);
-    
+
 
     SDL_Texture* textTexture1 = SDL_CreateTextureFromSurface(renderer, textSurface1);
     SDL_Texture* textTexture2 = SDL_CreateTextureFromSurface(renderer, textSurface2);
@@ -493,7 +263,7 @@ int main(int argc, char* argv[])
     SDL_Texture* textTexture4 = SDL_CreateTextureFromSurface(renderer, textSurface4);
     SDL_Texture* textTexture5 = SDL_CreateTextureFromSurface(renderer, textSurface5);
     SDL_Texture* textTexture6 = SDL_CreateTextureFromSurface(renderer, textSurface6);
-    
+
     string coinText = "Coins: " + to_string(coinCount);
     SDL_Surface* textSurface7 = TTF_RenderText_Blended(font, coinText.c_str(), 0, primaryColour);
     SDL_Texture* textTexture7 = SDL_CreateTextureFromSurface(renderer, textSurface7);
@@ -501,7 +271,7 @@ int main(int argc, char* argv[])
     const bool* keys = SDL_GetKeyboardState(NULL);
 
     const int numberOfFramesForKnight = 8;
-	const int numberOfFramesForEnemy = 12;
+    const int numberOfFramesForEnemy = 12;
 
     SDL_Texture* rollingRightAnimation[numberOfFramesForKnight];
     for (int i = 0; i < 8; i++)
@@ -525,7 +295,7 @@ int main(int argc, char* argv[])
         SDL_DestroySurface(tempSurface);
     }
 
-	//enemy animation for going forward (Not done one for backwards)
+    //enemy animation for going forward (Not done one for backwards)
 
     SDL_Texture* enemyRunFrameForwards[numberOfFramesForEnemy];
     for (int i = 0; i < 12; i++)
@@ -540,7 +310,7 @@ int main(int argc, char* argv[])
     }
 
     //sprite animation for going forward
-	
+
     SDL_Texture* runFramesForwards[numberOfFramesForKnight];
     for (int i = 0; i < 8; i++)
     {
@@ -579,7 +349,7 @@ int main(int argc, char* argv[])
 
     }
 
-	const int numberOfCoinFrames = 8;
+    const int numberOfCoinFrames = 8;
     SDL_Texture* coins[numberOfCoinFrames];
     for (int i = 0; i < numberOfCoinFrames; i++)
     {
@@ -675,7 +445,7 @@ int main(int argc, char* argv[])
 
         bool moving = false;
         xVelocity = 0;
-    
+
         if (levelCompleted == false && gameStarted == true)
         {
             if (keys[SDL_SCANCODE_D])
@@ -713,18 +483,18 @@ int main(int argc, char* argv[])
                 }
 
                 xPosition += xVelocity * deltaTime;
-        }
+            }
 
-        //if (w key is pressed AND not moving)
-        //then roll and move at the same time 
+            //if (w key is pressed AND not moving)
+            //then roll and move at the same time 
 
-        if (keys[SDL_SCANCODE_SPACE] && onGround)
-        {
-            yVelocity = jumpStrength;
-            onGround = false;
-            bottomReached = false;
+            if (keys[SDL_SCANCODE_SPACE] && onGround)
+            {
+                yVelocity = jumpStrength;
+                onGround = false;
+                bottomReached = false;
+            }
         }
-    }
 
         if (moving)
         {
@@ -749,7 +519,7 @@ int main(int argc, char* argv[])
             currentFrameEnemy = (currentFrameEnemy + 1) % 12;
             lastEnemyFrameTime = currentTime;
         }
-        
+
         if (currentTime - lastCoinFrameTime >= coinFrameDelay)
         {
             currentCoinFrame = (currentCoinFrame + 1) % 8;
@@ -811,13 +581,13 @@ int main(int argc, char* argv[])
             }
         }
 
-        
+
         SDL_FRect textRect3 = { 50 - cameraX - 5, 200.f, (float)textSurface3->w,(float)textSurface3->h };
 
         if (collisionWithFlag(xPosition, yPosition, playerWidth, playerHeight,
             flagX, flagY, 150, 300) && levelCompleted == false)
         {
-            
+
             cout << "You win!" << endl;
             levelCompleted = true;
 
@@ -833,7 +603,7 @@ int main(int argc, char* argv[])
 
         }
         onGround = bottomReached;
-        
+
         //Camera movement so that the camera is always focussed on the player
         cameraX = xPosition - screenWidth / 2 + playerWidth / 2;
 
@@ -844,11 +614,11 @@ int main(int argc, char* argv[])
         //must render stuff after this
 
 
-        
+
 
         float backgroundWidth = screenWidth;
         float backgroundHeight = screenHeight;
-		float backgroundScrollX = cameraX * 0.1f; //moves with cameras X position but slower because of the 0.1 multiplier, creating a parallax effect where the background moves slower than the foreground, giving the illusion of depth
+        float backgroundScrollX = cameraX * 0.1f; //moves with cameras X position but slower because of the 0.1 multiplier, creating a parallax effect where the background moves slower than the foreground, giving the illusion of depth
 
         while (backgroundScrollX >= backgroundWidth) // keeps within one screen width, because once you scroll past 1500 it'd start again at 0
         {
@@ -871,12 +641,12 @@ int main(int argc, char* argv[])
         SDL_GetTextureSize(knightTexture, &width, &height);
         SDL_FRect rectKnight = { xPosition - cameraX, yPosition, 100.0f, 100.0f * scaleHeight };
 
-        
+
         //enemy
         SDL_GetTextureSize(enemyTexture, &width, &height);
 
-		xEnemyPosition += enemySpeed * enemyDirection * deltaTime; //move at a certain speed and depending on where it is, the direction will be +ve or -ve and changes, then multiplied by deltatime which is the time between frames to make sure it moves the same at different frame rates, e.g. if its 0.016 seconds between frames then it moves 16 pixels every frame, but if its 0.033 seconds between frames then it moves 33 pixels every frame, meaning it moves the same distance over time at different frame rates
-        
+        xEnemyPosition += enemySpeed * enemyDirection * deltaTime; //move at a certain speed and depending on where it is, the direction will be +ve or -ve and changes, then multiplied by deltatime which is the time between frames to make sure it moves the same at different frame rates, e.g. if its 0.016 seconds between frames then it moves 16 pixels every frame, but if its 0.033 seconds between frames then it moves 33 pixels every frame, meaning it moves the same distance over time at different frame rates
+
         if (xEnemyPosition <= 1800.f)
         {
             enemyDirection = 1;
@@ -886,7 +656,7 @@ int main(int argc, char* argv[])
         {
             enemyDirection = -1;
         }
-        
+
         SDL_FRect rectEnemyForwards = { xEnemyPosition - cameraX, yEnemyPosition, 80.0f * scaleWidth, 80.0f };
 
         SDL_RenderTexture(renderer, enemyRunFrameForwards[currentFrameEnemy], NULL, &rectEnemyForwards);
@@ -931,7 +701,7 @@ int main(int argc, char* argv[])
 
 
         //flag
-        SDL_FRect rectFlag = {flagX - cameraX, flagY, 150.f, 300.f};
+        SDL_FRect rectFlag = { flagX - cameraX, flagY, 150.f, 300.f };
 
         SDL_RenderTexture(renderer, flags[currentFlagFrame], NULL, &rectFlag);
 
@@ -952,7 +722,7 @@ int main(int argc, char* argv[])
             groundScrollX += groundWidth;
         }
 
-        SDL_FRect textRect7 = { screenWidth - 500 , 10.f, (float)textSurface3->w/3, (float)textSurface7->h/2 };
+        SDL_FRect textRect7 = { screenWidth - 500 , 10.f, (float)textSurface3->w / 3, (float)textSurface7->h / 2 };
         SDL_RenderTexture(renderer, textTexture7, NULL, &textRect7);
 
         //We need two grounds because one isnt enough, 
@@ -969,7 +739,7 @@ int main(int argc, char* argv[])
             SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatforms);
         }
 
-        
+
 
         for (int i = 0; i < 5; i++)
         {
@@ -980,15 +750,15 @@ int main(int argc, char* argv[])
 
         }
 
-        
-        
+
+
         //ben
         if (gameStarted == false)
         {
 
             SDL_FRect textRect1 = { -450 - cameraX, 100.f, (float)textSurface1->w,(float)textSurface1->h };
-            SDL_FRect textRect2 = { -450 - cameraX - 5, 95.f, (float)textSurface2->w,(float)textSurface2->h }; 
-            SDL_FRect textRect5 = { -375 - cameraX - 5, 300.f, (float)textSurface5->w/2,(float)textSurface5->h/2 };
+            SDL_FRect textRect2 = { -450 - cameraX - 5, 95.f, (float)textSurface2->w,(float)textSurface2->h };
+            SDL_FRect textRect5 = { -375 - cameraX - 5, 300.f, (float)textSurface5->w / 2,(float)textSurface5->h / 2 };
 
 
 
@@ -1000,10 +770,10 @@ int main(int argc, char* argv[])
             if (keys[SDL_SCANCODE_SPACE])
             {
                 gameStarted = true;
-               
+
             }
         }
-        
+
 
         if (levelCompleted)
         {
@@ -1014,14 +784,14 @@ int main(int argc, char* argv[])
             };
 
             SDL_FRect textRect4 =
-            { 
+            {
                 ((screenWidth - textSurface4->w) / 2.0f) - 5.f, 145.f, (float)textSurface4->w, (float)textSurface4->h
             };
 
             SDL_RenderTexture(renderer, textTexture4, NULL, &textRect4);
 
             SDL_RenderTexture(renderer, textTexture3, NULL, &textRect3);
-            
+
         }
 
         if (rolling)
@@ -1052,10 +822,7 @@ int main(int argc, char* argv[])
 
     }
 
-    SDL_FRect textRect7 =
-    {
-        screenWidth - textSurface7->w - 30.f, 30.f, (float)textSurface7->w, (float)textSurface7->h
-    };
+    SDL_FRect textRect7 = { screenWidth - textSurface7->w - 30.f, 30.f, (float)textSurface7->w, (float)textSurface7->h };
 
     SDL_RenderTexture(renderer, textTexture7, NULL, &textRect7);
 
