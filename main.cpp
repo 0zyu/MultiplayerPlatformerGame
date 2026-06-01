@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 #include "Collision.h"
+#include "Player.h"
+
+
 
 using namespace std;
 
@@ -13,14 +16,10 @@ int main(int argc, char* argv[])
 {
 
 
-    //Player variables
-    float xPosition = 5.f; //was 5
-    float yPosition = 5.f;
-    float xVelocity = 0.f; //how fast the player moves in the X Direction
-    float yVelocity = 0.f; //how fast its falling/moving in Y direction
-    int playerHeight = 120;
-    int playerWidth = 100;
+   
+    Player player;
 
+    
     //Gravity variables
     float gravity = 1800.0f; //gravity strength and how much it pulls down
     float jumpStrength = -700.0f; //how high the player will jump
@@ -33,9 +32,9 @@ int main(int argc, char* argv[])
     float cameraX = 0.0f;
     float backgroundScrollX = cameraX * 0.3f; // smaller = slower parallax
     float rollingFrameDelay = 100.f;
-    int currentFrame = 0;
+    
     int currentFrameEnemy = 0;
-    int currentFrameRolling = 0;
+    
 
     //Platform variables
     bool bottomReached = false;
@@ -74,10 +73,9 @@ int main(int argc, char* argv[])
 
     //Input variables
     bool wWasPressed = false;
-    bool rolling = false;
-    bool onGround = false;
+   
     bool spaceWasPressed = false;
-    bool facingRight = true;
+    
     bool gameLoop = true;
     bool gameStarted = false;
 
@@ -441,57 +439,57 @@ int main(int argc, char* argv[])
 
         }
 
-        rolling = false;
+        player.rolling = false;
 
         bool moving = false;
-        xVelocity = 0;
+        player.xVelocity = 0;
 
         if (levelCompleted == false && gameStarted == true)
         {
             if (keys[SDL_SCANCODE_D])
             {
-                xVelocity = speed;
-                xPosition += xVelocity * deltaTime;
-                facingRight = true;
+                player.xVelocity = speed;
+                player.xPosition += player.xVelocity * deltaTime;
+                player.facingRight = true;
                 moving = true;
             }
 
-            if (keys[SDL_SCANCODE_A] && xPosition > 0.f)
+            if (keys[SDL_SCANCODE_A] && player.xPosition > 0.f)
             {
-                xVelocity = -speed;
-                xPosition += xVelocity * deltaTime;
-                facingRight = false;
+                player.xVelocity = -speed;
+                player.xPosition += player.xVelocity * deltaTime;
+                player.facingRight = false;
                 moving = true;
             }
 
 
-            if (keys[SDL_SCANCODE_W] && xPosition > 0.f && moving)
+            if (keys[SDL_SCANCODE_W] && player.xPosition > 0.f && moving)
             {
-                rolling = true;
+                player.rolling = true;
                 moving = false;
                 wWasPressed = keys[SDL_SCANCODE_W];
-                if (facingRight)
+                if (player.facingRight)
                 {
-                    xVelocity = 0;
-                    xVelocity += speed * deltaTime;
+                    player.xVelocity = 0;
+                    player.xVelocity += speed * deltaTime;
                 }
                 else
                 {
 
-                    xVelocity = 0;
-                    xVelocity += -speed * deltaTime;
+                    player.xVelocity = 0;
+                    player.xVelocity += -speed * deltaTime;
                 }
 
-                xPosition += xVelocity * deltaTime;
+                player.xPosition += player.xVelocity * deltaTime;
             }
 
             //if (w key is pressed AND not moving)
             //then roll and move at the same time 
 
-            if (keys[SDL_SCANCODE_SPACE] && onGround)
+            if (keys[SDL_SCANCODE_SPACE] && player.onGround)
             {
-                yVelocity = jumpStrength;
-                onGround = false;
+                player.yVelocity = jumpStrength;
+                player.onGround = false;
                 bottomReached = false;
             }
         }
@@ -502,7 +500,7 @@ int main(int argc, char* argv[])
 
             if (currentTime - lastFrameTime >= frameDelay) //if the time between last time check and current time check is more than 100 milliseconds then change the frame of the sprite
             {
-                currentFrame = (currentFrame + 1) % 8;
+                player.currentFrame = (player.currentFrame + 1) % 8;
 
                 lastFrameTime = currentTime;
 
@@ -511,7 +509,7 @@ int main(int argc, char* argv[])
 
         else
         {
-            currentFrame = 1;
+            player.currentFrame = 1;
         }
 
         if (currentTime - lastEnemyFrameTime >= enemyFrameDelay)
@@ -537,28 +535,28 @@ int main(int argc, char* argv[])
         }
         //knight roll
         SDL_GetTextureSize(rollingTexture, &width, &height);
-        SDL_FRect rollingKnight = { xPosition - cameraX, yPosition + 20, 80.0f, 100.0f };
+        SDL_FRect rollingKnight = { player.xPosition - cameraX, player.yPosition + 20, 80.0f, 100.0f };
 
 
-        if (rolling)
+        if (player.rolling)
         {
             if (currentTime - lastFrameTimeRolling >= rollingFrameDelay)
             {
-                currentFrameRolling = (currentFrameRolling + 1) % 8;
+                player.currentFrameRolling = (player.currentFrameRolling + 1) % 8;
                 lastFrameTimeRolling = currentTime;
             }
         }
         else
         {
-            currentFrameRolling = 0;
+            player.currentFrameRolling = 0;
         }
 
 
         //gravity
         if (bottomReached == false)
         {
-            yVelocity += gravity * deltaTime; //meaning every frame gravity is stronger as the yvelocity adds more gravity onto it EVERY frame, e.g. frame 1 its 0.2 then frame 2 its 0.4 etc
-            yPosition += yVelocity * deltaTime;
+            player.yVelocity += gravity * deltaTime; //meaning every frame gravity is stronger as the yvelocity adds more gravity onto it EVERY frame, e.g. frame 1 its 0.2 then frame 2 its 0.4 etc
+            player.yPosition += player.yVelocity * deltaTime;
         }
 
         else
@@ -571,8 +569,8 @@ int main(int argc, char* argv[])
         for (int i = 0; i < numberOfPlatforms; i++)
         {
 
-            if (collision(xPosition, yPosition, playerWidth, playerHeight, platformXPositions[i], platformYPositions[i],
-                yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight, xVelocity, yMovingPlatformDifference,
+            if (collision(player.xPosition, player.yPosition, player.width, player.height, platformXPositions[i], platformYPositions[i],
+                player.yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight, player.xVelocity, yMovingPlatformDifference,
                 xMovingPlatformDifference, i, xMovingPlatformDirection)
                 )
             {
@@ -584,28 +582,27 @@ int main(int argc, char* argv[])
 
         SDL_FRect textRect3 = { 50 - cameraX - 5, 200.f, (float)textSurface3->w,(float)textSurface3->h };
 
-        if (collisionWithFlag(xPosition, yPosition, playerWidth, playerHeight,
+        if (collisionWithFlag(player.xPosition, player.yPosition, player.width, player.height,
             flagX, flagY, 150, 300) && levelCompleted == false)
         {
 
-            cout << "You win!" << endl;
             levelCompleted = true;
 
         }
 
 
         //touching ground separate from collision detection because it allows all platforms to be collided with, not just the first few 
-        if (yPosition + playerHeight >= groundY)
+        if (player.yPosition + player.height >= groundY)
         {
-            yPosition = groundY - playerHeight;
-            yVelocity = 0.0f;
+            player.yPosition = groundY - player.height;
+            player.yVelocity = 0.0f;
             bottomReached = true;
 
         }
-        onGround = bottomReached;
+        player.onGround = bottomReached;
 
         //Camera movement so that the camera is always focussed on the player
-        cameraX = xPosition - screenWidth / 2 + playerWidth / 2;
+        cameraX = player.xPosition - screenWidth / 2 + player.width / 2;
 
 
         // Screen
@@ -639,7 +636,7 @@ int main(int argc, char* argv[])
 
         //knight
         SDL_GetTextureSize(knightTexture, &width, &height);
-        SDL_FRect rectKnight = { xPosition - cameraX, yPosition, 100.0f, 100.0f * scaleHeight };
+        SDL_FRect rectKnight = { player.xPosition - cameraX, player.yPosition, 100.0f, 100.0f * scaleHeight };
 
 
         //enemy
@@ -661,7 +658,7 @@ int main(int argc, char* argv[])
 
         SDL_RenderTexture(renderer, enemyRunFrameForwards[currentFrameEnemy], NULL, &rectEnemyForwards);
 
-        collisionWithEnemy(xPosition, yPosition, playerWidth, playerHeight, xEnemyPosition, yEnemyPosition, xVelocity, yVelocity, bottomReached, enemyKilled, enemyTimer, enemyWidth, enemyHeight);
+        collisionWithEnemy(player.xPosition, player.yPosition, player.width, player.height, xEnemyPosition, yEnemyPosition, player.xVelocity, player.yVelocity, bottomReached, enemyKilled, enemyTimer, enemyWidth, enemyHeight);
 
 
         if (enemyKilled == true)
@@ -681,9 +678,9 @@ int main(int argc, char* argv[])
         for (int i = 0; i < 5; i++)
         {
 
-            if (collisionWithCoin(xPosition, yPosition, playerWidth, playerHeight,
+            if (collisionWithCoin(player.xPosition, player.yPosition, player.width, player.height,
                 coinXPositions[i], coinYPositions[i],
-                xVelocity, yVelocity, bottomReached,
+                player.xVelocity, player.yVelocity, bottomReached,
                 coinCollected, coinWidth, coinHeight, coinCount))
             {
                 coinYPositions[i] = 2000.f;
@@ -794,26 +791,26 @@ int main(int argc, char* argv[])
 
         }
 
-        if (rolling)
+        if (player.rolling)
         {
-            if (facingRight)
+            if (player.facingRight)
             {
-                SDL_RenderTexture(renderer, rollingRightAnimation[currentFrameRolling], NULL, &rollingKnight);
+                SDL_RenderTexture(renderer, rollingRightAnimation[player.currentFrameRolling], NULL, &rollingKnight);
             }
             else
             {
-                SDL_RenderTexture(renderer, rollingLeftAnimation[currentFrameRolling], NULL, &rollingKnight);
+                SDL_RenderTexture(renderer, rollingLeftAnimation[player.currentFrameRolling], NULL, &rollingKnight);
             }
         }
         else
         {
-            if (facingRight)
+            if (player.facingRight)
             {
-                SDL_RenderTexture(renderer, runFramesForwards[currentFrame], NULL, &rectKnight);
+                SDL_RenderTexture(renderer, runFramesForwards[player.currentFrame], NULL, &rectKnight);
             }
             else
             {
-                SDL_RenderTexture(renderer, runFramesBackwards[currentFrame], NULL, &rectKnight);
+                SDL_RenderTexture(renderer, runFramesBackwards[player.currentFrame], NULL, &rectKnight);
             }
         }
 
