@@ -437,9 +437,11 @@ void Game::update(float deltaTime)
 
 void Game::render()
 {
+	// Clear the screen
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer);
 
+	// Background rendering
     float backgroundWidth = screenWidth;
     float backgroundHeight = screenHeight;
     float backgroundScrollX = cameraX * 0.1f;
@@ -472,6 +474,55 @@ void Game::render()
 
     SDL_RenderTexture(renderer, backgroundTexture, NULL, &background1);
     SDL_RenderTexture(renderer, backgroundTexture, NULL, &background2);
+
+    // Ground rendering
+    float groundWidth = screenWidth;
+    float groundHeight = 80.f;
+
+    float groundScrollX = cameraX;
+
+    while (groundScrollX >= groundWidth)
+    {
+        groundScrollX -= groundWidth;
+    }
+
+    while (groundScrollX < 0)
+    {
+        groundScrollX += groundWidth;
+    }
+
+    SDL_FRect ground1 =
+    {
+        -groundScrollX,
+        groundY,
+        groundWidth,
+        groundHeight
+    };
+
+    SDL_FRect ground2 =
+    {
+        groundWidth - groundScrollX,
+        groundY,
+        groundWidth,
+        groundHeight
+    };
+
+    SDL_RenderTexture(renderer, groundTexture, NULL, &ground1);
+    SDL_RenderTexture(renderer, groundTexture, NULL, &ground2);
+
+    // Platform rendering
+    for (int i = 0; i < platforms.size(); i++)
+    {
+        SDL_FRect rectPlatform =
+        {
+            platforms[i].xPosition - cameraX,
+            platforms[i].yPosition,
+            platforms[i].width,
+            platforms[i].height
+        };
+
+        SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatform);
+    }
 
     SDL_RenderPresent(renderer);
 }
