@@ -390,6 +390,36 @@ void Game::update(float deltaTime)
         }
     }
 
+	//Player animation code
+    if (moving)
+    {
+        Uint64 currentTime = SDL_GetTicks();
+
+        if (currentTime - lastFrameTime >= frameDelay)
+        {
+            player.currentFrame = (player.currentFrame + 1) % numberOfFramesForKnight;
+            lastFrameTime = currentTime;
+        }
+    }
+    else
+    {
+        player.currentFrame = 1;
+    }
+
+    if (player.rolling)
+    {
+        Uint64 currentTime = SDL_GetTicks();
+
+        if (currentTime - lastFrameTimeRolling >= rollingFrameDelay)
+        {
+            player.currentFrameRolling = (player.currentFrameRolling + 1) % numberOfFramesForKnight;
+            lastFrameTimeRolling = currentTime;
+        }
+    }
+    else
+    {
+        player.currentFrameRolling = 0;
+    }
     //Collision and gravity code
     if (bottomReached == false)
     {
@@ -524,5 +554,44 @@ void Game::render()
         SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatform);
     }
 
+    // Player rendering
+    SDL_FRect rectKnight =
+    {
+        player.xPosition - cameraX,
+        player.yPosition,
+        100.0f,
+        100.0f * scaleHeight
+    };
+
+    SDL_FRect rollingKnight =
+    {
+        player.xPosition - cameraX,
+        player.yPosition + 20,
+        80.0f,
+        100.0f
+    };
+
+    if (player.rolling)
+    {
+        if (player.facingRight)
+        {
+            SDL_RenderTexture(renderer, rollingRightAnimation[player.currentFrameRolling], NULL, &rollingKnight);
+        }
+        else
+        {
+            SDL_RenderTexture(renderer, rollingLeftAnimation[player.currentFrameRolling], NULL, &rollingKnight);
+        }
+    }
+    else
+    {
+        if (player.facingRight)
+        {
+            SDL_RenderTexture(renderer, runFramesForwards[player.currentFrame], NULL, &rectKnight);
+        }
+        else
+        {
+            SDL_RenderTexture(renderer, runFramesBackwards[player.currentFrame], NULL, &rectKnight);
+        }
+    }
     SDL_RenderPresent(renderer);
 }
