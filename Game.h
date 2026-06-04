@@ -75,4 +75,55 @@ private:
 
     float screenWidth = 1500;
     float screenHeight = 800;
+
+    // General game state
+    bool bottomReached = false;
+    bool moving = false;
+    bool wWasPressed = false;
+    bool spaceWasPressed = false;
+
+    // Timing
+    Uint64 previousTime = 0;
+    Uint64 lastFrameTime = 0;
+    Uint64 lastEnemyFrameTime = 0;
+    Uint64 lastCoinFrameTime = 0;
+    Uint64 lastFrameTimeRolling = 0;
+    Uint64 lastFlagFrameTime = 0;
+    Uint64 enemyTimer = 0;
+
+    // Animation
+    int frameDelay = 100;
+    int coinFrameDelay = 100;
+    int currentCoinFrame = 0;
+    float rollingFrameDelay = 100.f;
+
+    // Texture/render helpers
+    float width = 0.f;
+    float height = 0.f;
+    float scaleHeight = 1.2f;
+    float scaleWidth = 1.2f;
+
+    // Ground
+    float groundY = 750.f;
+
+    // Coins
+    int coinWidth = 45;
+    int coinHeight = 54;
+    int coinCount = 0;
+
+    // Moving platforms
+    float xMovingPlatformPosition = 1300.f;
+    float xMovingPlatformSpeed = 200.f;
+    float xMovingPlatformDirection = 1.f;
+
+    float yMovingPlatformPosition = 560.f;
+    float yMovingPlatformSpeed = 200.f;
+    float yMovingPlatformDirection = 1.f;
+
+    // Platform limits
+    float platformLimitLeft = 700.f;
+    float platformLimitRight = 1300.f;
+    float platformLimitTop = 250.f;
+    float platformLimitBottom = 650.f;
+
 };

@@ -54,6 +54,14 @@ bool Game::init()
     SDL_Surface* surfaceCoin = IMG_Load("assets/coin1.png");
     SDL_Surface* surfaceFlag = IMG_Load("assets/betterflag1.png");
 
+    previousTime = SDL_GetTicks();
+    lastFrameTime = SDL_GetTicks();
+    lastEnemyFrameTime = SDL_GetTicks();
+    lastCoinFrameTime = SDL_GetTicks();
+    lastFrameTimeRolling = SDL_GetTicks();
+    lastFlagFrameTime = SDL_GetTicks();
+
+    enemy.lastFrameTime = SDL_GetTicks();
     if (!surfaceKnight || !surfacePlatform || !surfaceBackground || !surfaceGround ||
         !surfaceEnemy || !surfaceRolling || !surfaceCoin || !surfaceFlag)
     {
@@ -206,7 +214,64 @@ void Game::run()
 {
     while (gameLoop)
     {
+        Uint64 currentTime = SDL_GetTicks();
+        float deltaTime = (currentTime - previousTime) / 1000.0f;
+        previousTime = currentTime;
+
         handleEvents();
+        update(deltaTime);
+        const bool* keys = SDL_GetKeyboardState(NULL);
+
+        player.rolling = false;
+        moving = false;
+        player.xVelocity = 0;
+
+        if (flag.levelCompleted == false && gameStarted == true)
+        {
+            if (keys[SDL_SCANCODE_D])
+            {
+                player.xVelocity = speed;
+                player.xPosition += player.xVelocity * deltaTime;
+                player.facingRight = true;
+                moving = true;
+            }
+
+            if (keys[SDL_SCANCODE_A] && player.xPosition > 0.f)
+            {
+                player.xVelocity = -speed;
+                player.xPosition += player.xVelocity * deltaTime;
+                player.facingRight = false;
+                moving = true;
+            }
+
+            if (keys[SDL_SCANCODE_W] && player.xPosition > 0.f && moving)
+            {
+                player.rolling = true;
+                moving = false;
+                wWasPressed = keys[SDL_SCANCODE_W];
+
+                if (player.facingRight)
+                {
+                    player.xVelocity = 0;
+                    player.xVelocity += speed * deltaTime;
+                }
+                else
+                {
+                    player.xVelocity = 0;
+                    player.xVelocity += -speed * deltaTime;
+                }
+
+                player.xPosition += player.xVelocity * deltaTime;
+            }
+
+            if (keys[SDL_SCANCODE_SPACE] && player.onGround)
+            {
+                player.yVelocity = jumpStrength;
+                player.onGround = false;
+                bottomReached = false;
+            }
+        }
+        render();
     }
 }
 
@@ -272,5 +337,8 @@ void Game::update(float deltaTime)
 
 void Game::render()
 {
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderClear(renderer);
 
+    SDL_RenderPresent(renderer);
 }
