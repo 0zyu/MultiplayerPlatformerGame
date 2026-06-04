@@ -29,17 +29,17 @@ private:
     void update(float deltaTime);
     void render();
 
+
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
+
+	//Still textures
     TTF_Font* font = nullptr;
     SDL_Texture* backgroundTexture = nullptr;
     SDL_Texture* groundTexture = nullptr;
     SDL_Texture* platformTexture = nullptr;
-    SDL_Texture* knightTexture = nullptr;
-    SDL_Texture* enemyTexture = nullptr;
-    SDL_Texture* rollingTexture = nullptr;
-    SDL_Texture* coinTexture = nullptr;
-    SDL_Texture* flagTexture = nullptr;
+	
+    
 
     static const int numberOfFramesForKnight = 8;
     static const int numberOfFramesForEnemy = 12;

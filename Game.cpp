@@ -72,15 +72,11 @@ bool Game::init()
     SDL_DestroySurface(levelCompleteTextSurface);
     SDL_DestroySurface(levelCompleteShadowSurface);
 
-	//Object textures
-    SDL_Surface* surfaceKnight = IMG_Load("assets/knightSprite1.png");
+    //Object Textures
     SDL_Surface* surfacePlatform = IMG_Load("assets/platform.png");
     SDL_Surface* surfaceBackground = IMG_Load("assets/Clouds.png");
     SDL_Surface* surfaceGround = IMG_Load("assets/ground.png");
-    SDL_Surface* surfaceEnemy = IMG_Load("assets/enemy1.png");
-    SDL_Surface* surfaceRolling = IMG_Load("assets/rollRight1.png");
-    SDL_Surface* surfaceCoin = IMG_Load("assets/coin1.png");
-    SDL_Surface* surfaceFlag = IMG_Load("assets/betterflag1.png");
+    
 
 	//Timing initialization
     previousTime = SDL_GetTicks();
@@ -91,26 +87,20 @@ bool Game::init()
     lastFlagFrameTime = SDL_GetTicks();
 
     enemy.lastFrameTime = SDL_GetTicks();
-    if (!surfaceKnight || !surfacePlatform || !surfaceBackground || !surfaceGround ||
-        !surfaceEnemy || !surfaceRolling || !surfaceCoin || !surfaceFlag)
+    if (!surfacePlatform || !surfaceBackground || !surfaceGround)
     {
         return false;
     }
 
-    flagTexture = SDL_CreateTextureFromSurface(renderer, surfaceFlag);
-    coinTexture = SDL_CreateTextureFromSurface(renderer, surfaceCoin);
-    rollingTexture = SDL_CreateTextureFromSurface(renderer, surfaceRolling);
+    
     backgroundTexture = SDL_CreateTextureFromSurface(renderer, surfaceBackground);
-    enemyTexture = SDL_CreateTextureFromSurface(renderer, surfaceEnemy);
-    knightTexture = SDL_CreateTextureFromSurface(renderer, surfaceKnight);
+
+  
     platformTexture = SDL_CreateTextureFromSurface(renderer, surfacePlatform);
     groundTexture = SDL_CreateTextureFromSurface(renderer, surfaceGround);
 
-    SDL_SetTextureScaleMode(flagTexture, SDL_SCALEMODE_NEAREST);
-    SDL_SetTextureScaleMode(coinTexture, SDL_SCALEMODE_NEAREST);
-    SDL_SetTextureScaleMode(rollingTexture, SDL_SCALEMODE_NEAREST);
-    SDL_SetTextureScaleMode(enemyTexture, SDL_SCALEMODE_NEAREST);
-    SDL_SetTextureScaleMode(knightTexture, SDL_SCALEMODE_NEAREST);
+   
+
     SDL_SetTextureScaleMode(platformTexture, SDL_SCALEMODE_NEAREST);
     SDL_SetTextureScaleMode(groundTexture, SDL_SCALEMODE_NEAREST);
 
@@ -220,15 +210,8 @@ bool Game::init()
         SDL_DestroySurface(tempSurface);
     }
 
-
-
-
-    SDL_DestroySurface(surfaceFlag);
-    SDL_DestroySurface(surfaceCoin);
-    SDL_DestroySurface(surfaceRolling);
     SDL_DestroySurface(surfaceBackground);
-    SDL_DestroySurface(surfaceEnemy);
-    SDL_DestroySurface(surfaceKnight);
+   
     SDL_DestroySurface(surfacePlatform);
     SDL_DestroySurface(surfaceGround);
 
@@ -237,6 +220,11 @@ bool Game::init()
 
     return true;
 }
+
+
+
+
+
 
 
 void Game::run()
@@ -251,12 +239,15 @@ void Game::run()
         update(deltaTime);
 
         
-
-
-
         render();
     }
 }
+
+
+
+
+
+
 
 void Game::clean()
 {
@@ -284,12 +275,7 @@ void Game::clean()
         SDL_DestroyTexture(flagFrames[i]);
     }
 
-    SDL_DestroyTexture(flagTexture);
-    SDL_DestroyTexture(coinTexture);
-    SDL_DestroyTexture(rollingTexture);
     SDL_DestroyTexture(backgroundTexture);
-    SDL_DestroyTexture(enemyTexture);
-    SDL_DestroyTexture(knightTexture);
     SDL_DestroyTexture(platformTexture);
     SDL_DestroyTexture(groundTexture);
     SDL_DestroyTexture(titleTextTexture);
@@ -310,6 +296,13 @@ void Game::clean()
     SDL_Quit();
 }
 
+
+
+
+
+
+
+
 void Game::handleEvents()
 {
     while (SDL_PollEvent(&event))
@@ -320,6 +313,13 @@ void Game::handleEvents()
         }
     }
 }
+
+
+
+
+
+
+
 
 void Game::update(float deltaTime)
 {
@@ -376,11 +376,6 @@ void Game::update(float deltaTime)
         {3800.f, 650.f},
         {4300.f, 650.f}
     };
-
-
-
-
-   
 
     player.rolling = false;
     moving = false;
@@ -611,6 +606,11 @@ void Game::update(float deltaTime)
     }
 
 }
+
+
+
+
+
 
 void Game::render()
 {
