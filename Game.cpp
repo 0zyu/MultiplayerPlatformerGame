@@ -46,6 +46,33 @@ bool Game::init()
         { 4375.f, 575.f }
     };
 
+    //Text
+    SDL_Surface* titleTextSurface = TTF_RenderText_Blended(font, "Knight Jump!", 0, primaryColour);
+    SDL_Surface* titleShadowSurface = TTF_RenderText_Blended(font, "Knight Jump!", 0, secondaryColour);
+    SDL_Surface* startTextSurface = TTF_RenderText_Blended(font, "Press SPACE to Start", 0, secondaryColour);
+
+    SDL_Surface* levelCompleteTextSurface = TTF_RenderText_Blended(font, "Level Complete!", 0, primaryColour);
+    SDL_Surface* levelCompleteShadowSurface = TTF_RenderText_Blended(font, "Level Complete!", 0, secondaryColour);
+
+    coinTextSurface = TTF_RenderText_Blended(font, coinText.c_str(), 0, primaryColour);
+
+    titleTextTexture = SDL_CreateTextureFromSurface(renderer, titleTextSurface);
+    titleShadowTexture = SDL_CreateTextureFromSurface(renderer, titleShadowSurface);
+    startTextTexture = SDL_CreateTextureFromSurface(renderer, startTextSurface);
+
+    levelCompleteTextTexture = SDL_CreateTextureFromSurface(renderer, levelCompleteTextSurface);
+    levelCompleteShadowTexture = SDL_CreateTextureFromSurface(renderer, levelCompleteShadowSurface);
+
+    coinTextTexture = SDL_CreateTextureFromSurface(renderer, coinTextSurface);
+
+    
+    SDL_DestroySurface(titleTextSurface);
+    SDL_DestroySurface(titleShadowSurface);
+    SDL_DestroySurface(startTextSurface);
+    SDL_DestroySurface(levelCompleteTextSurface);
+    SDL_DestroySurface(levelCompleteShadowSurface);
+
+	//Object textures
     SDL_Surface* surfaceKnight = IMG_Load("assets/knightSprite1.png");
     SDL_Surface* surfacePlatform = IMG_Load("assets/platform.png");
     SDL_Surface* surfaceBackground = IMG_Load("assets/Clouds.png");
@@ -55,6 +82,7 @@ bool Game::init()
     SDL_Surface* surfaceCoin = IMG_Load("assets/coin1.png");
     SDL_Surface* surfaceFlag = IMG_Load("assets/betterflag1.png");
 
+	//Timing initialization
     previousTime = SDL_GetTicks();
     lastFrameTime = SDL_GetTicks();
     lastEnemyFrameTime = SDL_GetTicks();
@@ -264,7 +292,15 @@ void Game::clean()
     SDL_DestroyTexture(knightTexture);
     SDL_DestroyTexture(platformTexture);
     SDL_DestroyTexture(groundTexture);
-    
+    SDL_DestroyTexture(titleTextTexture);
+    SDL_DestroyTexture(titleShadowTexture);
+    SDL_DestroyTexture(startTextTexture);
+
+    SDL_DestroyTexture(levelCompleteTextTexture);
+    SDL_DestroyTexture(levelCompleteShadowTexture);
+
+    SDL_DestroyTexture(coinTextTexture);
+    SDL_DestroySurface(coinTextSurface);
 
     TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
@@ -515,6 +551,8 @@ void Game::update(float deltaTime)
     {
         if (!coinsList[i].collected)
         {
+            int oldCoinCount = coinCount;
+
             collisionWithCoin(player.xPosition, player.yPosition,
                 player.width, player.height,
                 coinsList[i].xPosition, coinsList[i].yPosition,
@@ -522,6 +560,17 @@ void Game::update(float deltaTime)
                 bottomReached,
                 coinsList[i].collected,
                 coinWidth, coinHeight, coinCount);
+
+            if (coinCount != oldCoinCount)
+            {
+                SDL_DestroyTexture(coinTextTexture);
+                SDL_DestroySurface(coinTextSurface);
+
+                coinText = "Coins: " + std::to_string(coinCount);
+
+                coinTextSurface = TTF_RenderText_Blended(font, coinText.c_str(), 0, primaryColour);
+                coinTextTexture = SDL_CreateTextureFromSurface(renderer, coinTextSurface);
+            }
         }
     }
 
@@ -670,6 +719,18 @@ void Game::render()
         }
     }
 
+    SDL_FRect coinTextRect =
+    {
+        screenWidth - 320.f,
+        25.f,
+        280.f,
+        60.f
+    };
+
+    SDL_RenderTexture(renderer, coinTextTexture, NULL, &coinTextRect);
+
+   
+
     //Flag rendering
 
     SDL_FRect rectFlag =
@@ -693,6 +754,60 @@ void Game::render()
     };
 
     SDL_RenderTexture(renderer, enemyRunFrameForwards[enemy.currentFrame], NULL, &rectEnemy);
+    
+    //Text
+    if (gameStarted == false)
+    {
+        SDL_FRect titleShadowRect =
+        {
+            (screenWidth / 2.0f) - 505.f,
+            115.f,
+            1010.f,
+            120.f
+        };
+
+        SDL_FRect titleTextRect =
+        {
+            (screenWidth / 2.0f) - 500.f,
+            110.f,
+            1000.f,
+            120.f
+        };
+
+        SDL_FRect startTextRect =
+        {
+            (screenWidth / 2.0f) - 335.f,
+            330.f,
+            670.f,
+            65.f
+        };
+
+        SDL_RenderTexture(renderer, titleShadowTexture, NULL, &titleShadowRect);
+        SDL_RenderTexture(renderer, titleTextTexture, NULL, &titleTextRect);
+        SDL_RenderTexture(renderer, startTextTexture, NULL, &startTextRect);
+    }
+
+    if (flag.levelCompleted)
+    {
+        SDL_FRect levelCompleteShadowRect =
+        {
+            245.f,
+            145.f,
+            1000.f,
+            100.f
+        };
+
+        SDL_FRect levelCompleteTextRect =
+        {
+            250.f,
+            150.f,
+            1000.f,
+            100.f
+        };
+
+        SDL_RenderTexture(renderer, levelCompleteShadowTexture, NULL, &levelCompleteShadowRect);
+        SDL_RenderTexture(renderer, levelCompleteTextTexture, NULL, &levelCompleteTextRect);
+    }
 
     // Player rendering
     SDL_FRect rectKnight =

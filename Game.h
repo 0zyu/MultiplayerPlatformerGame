@@ -15,6 +15,8 @@
 #include "Platform.h"
 #include "Flag.h"
 
+using namespace std;
+
 class Game
 {
 public:
@@ -53,14 +55,30 @@ private:
     SDL_Texture* coinFrames[numberOfCoinFrames];
     SDL_Texture* flagFrames[numberOfFlagFrames];
 
+    SDL_Texture* titleTextTexture = nullptr;
+    SDL_Texture* titleShadowTexture = nullptr;
+    SDL_Texture* startTextTexture = nullptr;
+
+    SDL_Texture* levelCompleteTextTexture = nullptr;
+    SDL_Texture* levelCompleteShadowTexture = nullptr;
+
+    SDL_Texture* coinTextTexture = nullptr;
+
+    SDL_Surface* coinTextSurface = nullptr;
+
+    SDL_Color primaryColour = { 255, 255, 255, 255 };
+    SDL_Color secondaryColour = { 0, 0, 0, 255 };
+
+    string coinText = "Coins: 0";
+
     SDL_Event event;
 
     Player player;
     Enemy enemy;
     Flag flag;
 
-    std::vector<Coin> coinsList;
-    std::vector<Platform> platforms;
+    vector<Coin> coinsList;
+    vector<Platform> platforms;
 
     bool gameLoop = true;
     bool gameStarted = false;
