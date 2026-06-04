@@ -6,7 +6,7 @@
 #include <vector>
 #include "Collision.h"
 #include "Player.h"
-
+#include "Enemy.h"
 
 
 using namespace std;
@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 
    
     Player player;
-
+    Enemy enemy;
     
     //Gravity variables
     float gravity = 1800.0f; //gravity strength and how much it pulls down
@@ -33,7 +33,6 @@ int main(int argc, char* argv[])
     float backgroundScrollX = cameraX * 0.3f; // smaller = slower parallax
     float rollingFrameDelay = 100.f;
     
-    int currentFrameEnemy = 0;
     
 
     //Platform variables
@@ -48,15 +47,8 @@ int main(int argc, char* argv[])
     float scaleHeight = 1.2f; //just to stretch the image out vertically a bit
     float scaleWidth = 1.2f; //just to stretch the image out horizontally a bit
 
-    //Enemy variables
-    int enemyFrameDelay = 100;
-    int enemyDirection = 1;
-    int enemyWidth = 80;
-    int enemyHeight = 80;
-    float xEnemyPosition = 1800.f;
-    float yEnemyPosition = 580.f;
-    float enemySpeed = 100.0f;
-    bool enemyKilled = false;
+	//Enemy variables
+    enemy.lastFrameTime = SDL_GetTicks();
 
     //Timer/Frame variables
     int i = 0;
@@ -512,9 +504,9 @@ int main(int argc, char* argv[])
             player.currentFrame = 1;
         }
 
-        if (currentTime - lastEnemyFrameTime >= enemyFrameDelay)
+        if (currentTime - lastEnemyFrameTime >= enemy.frameDelay)
         {
-            currentFrameEnemy = (currentFrameEnemy + 1) % 12;
+            enemy.currentFrame = (enemy.currentFrame + 1) % 12;
             lastEnemyFrameTime = currentTime;
         }
 
@@ -642,34 +634,34 @@ int main(int argc, char* argv[])
         //enemy
         SDL_GetTextureSize(enemyTexture, &width, &height);
 
-        xEnemyPosition += enemySpeed * enemyDirection * deltaTime; //move at a certain speed and depending on where it is, the direction will be +ve or -ve and changes, then multiplied by deltatime which is the time between frames to make sure it moves the same at different frame rates, e.g. if its 0.016 seconds between frames then it moves 16 pixels every frame, but if its 0.033 seconds between frames then it moves 33 pixels every frame, meaning it moves the same distance over time at different frame rates
+        enemy.xPosition += enemy.speed * enemy.direction * deltaTime; //move at a certain speed and depending on where it is, the direction will be +ve or -ve and changes, then multiplied by deltatime which is the time between frames to make sure it moves the same at different frame rates, e.g. if its 0.016 seconds between frames then it moves 16 pixels every frame, but if its 0.033 seconds between frames then it moves 33 pixels every frame, meaning it moves the same distance over time at different frame rates
 
-        if (xEnemyPosition <= 1800.f)
+        if (enemy.xPosition <= 1800.f)
         {
-            enemyDirection = 1;
+            enemy.direction = 1;
         }
 
-        else if (xEnemyPosition >= 2300.f)
+        else if (enemy.xPosition >= 2300.f)
         {
-            enemyDirection = -1;
+            enemy.direction = -1;
         }
 
-        SDL_FRect rectEnemyForwards = { xEnemyPosition - cameraX, yEnemyPosition, 80.0f * scaleWidth, 80.0f };
+        SDL_FRect rectEnemyForwards = { enemy.xPosition - cameraX, enemy.yPosition, 80.0f * scaleWidth, 80.0f };
 
-        SDL_RenderTexture(renderer, enemyRunFrameForwards[currentFrameEnemy], NULL, &rectEnemyForwards);
+        SDL_RenderTexture(renderer, enemyRunFrameForwards[enemy.currentFrame], NULL, &rectEnemyForwards);
 
-        collisionWithEnemy(player.xPosition, player.yPosition, player.width, player.height, xEnemyPosition, yEnemyPosition, player.xVelocity, player.yVelocity, bottomReached, enemyKilled, enemyTimer, enemyWidth, enemyHeight);
+        collisionWithEnemy(player.xPosition, player.yPosition, player.width, player.height, enemy.xPosition, enemy.yPosition, player.xVelocity, player.yVelocity, bottomReached, enemy.killed, enemyTimer, enemy.width, enemy.height);
 
 
-        if (enemyKilled == true)
+        if (enemy.killed == true)
         {
             Uint64 currentTimeCheck = SDL_GetTicks();
 
             if (currentTimeCheck - enemyTimer >= 3000.f)
             {
-                xEnemyPosition = 1800.f;
-                yEnemyPosition = 580.f;
-                enemyKilled = false;
+                enemy.xPosition = 1800.f;
+                enemy.yPosition = 580.f;
+                enemy.killed = false;
             }
         }
 
