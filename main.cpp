@@ -8,7 +8,7 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "Coin.h"
-
+#include "Game.h"
 using namespace std;
 
 
@@ -16,9 +16,10 @@ int main(int argc, char* argv[])
 {
 
 
-   
+    
     Player player;
     Enemy enemy;
+
     
     //Gravity variables
     float gravity = 1800.0f; //gravity strength and how much it pulls down
