@@ -10,7 +10,7 @@
 #include "Coin.h"
 #include "Game.h"
 #include "Platform.h"
-
+#include "Flag.h"
 using namespace std;
 
 
@@ -83,10 +83,9 @@ int main(int argc, char* argv[])
     float yMovingPlatformDirection = 1;
 
     //flag variables
-    float flagX = 5400.f;
-    float flagY = 450.f;
-    bool levelCompleted = false;
+    Flag flag;
 
+    
     //Surfaces
     SDL_Surface* surfaceKnight = IMG_Load("assets/knightSprite1.png");
     SDL_Surface* surfacePlatform = IMG_Load("assets/platform.png");
@@ -365,7 +364,7 @@ int main(int argc, char* argv[])
         { 3275.f, 475.f },
         { 4375.f, 575.f }
     };
-
+    
     const int numberOfFlagFrames = 6;
     SDL_Texture* flags[numberOfFlagFrames];
     for (int i = 0; i < numberOfFlagFrames; i++)
@@ -378,8 +377,6 @@ int main(int argc, char* argv[])
         SDL_DestroySurface(tempSurface);
 
     }
-    int currentFlagFrame = 0;
-    int flagFrameDelay = 250;
     Uint64 lastFlagFrameTime = SDL_GetTicks();
 
     while (gameLoop)
@@ -454,7 +451,7 @@ int main(int argc, char* argv[])
         bool moving = false;
         player.xVelocity = 0;
 
-        if (levelCompleted == false && gameStarted == true)
+        if (flag.levelCompleted == false && gameStarted == true)
         {
             if (keys[SDL_SCANCODE_D])
             {
@@ -535,11 +532,11 @@ int main(int argc, char* argv[])
         }
 
         //flag
-        if (levelCompleted == false)
+        if (flag.levelCompleted == false)
         {
-            if (currentTime - lastFlagFrameTime >= flagFrameDelay)
+            if (currentTime - lastFlagFrameTime >= flag.frameDelay)
             {
-                currentFlagFrame = (currentFlagFrame + 1) % numberOfFlagFrames;
+                flag.currentFrame = (flag.currentFrame + 1) % numberOfFlagFrames;
                 lastFlagFrameTime = currentTime;
             }
         }
@@ -601,10 +598,10 @@ int main(int argc, char* argv[])
         SDL_FRect textRect3 = { 50 - cameraX - 5, 200.f, (float)textSurface3->w,(float)textSurface3->h };
 
         if (collisionWithFlag(player.xPosition, player.yPosition, player.width, player.height,
-            flagX, flagY, 150, 300) && levelCompleted == false)
+            flag.xPosition, flag.yPosition, 150, 300) && flag.levelCompleted == false)
         {
 
-            levelCompleted = true;
+            flag.levelCompleted = true;
 
         }
 
@@ -720,9 +717,9 @@ int main(int argc, char* argv[])
 
 
         //flag
-        SDL_FRect rectFlag = { flagX - cameraX, flagY, 150.f, 300.f };
+        SDL_FRect rectFlag = { flag.xPosition - cameraX, flag.yPosition, 150.f, 300.f };
 
-        SDL_RenderTexture(renderer, flags[currentFlagFrame], NULL, &rectFlag);
+        SDL_RenderTexture(renderer, flags[flag.currentFrame], NULL, &rectFlag);
 
         //Ground
         float groundWidth = screenWidth;
@@ -807,7 +804,7 @@ int main(int argc, char* argv[])
         }
 
 
-        if (levelCompleted)
+        if (flag.levelCompleted)
         {
 
             SDL_FRect textRect3 =
@@ -873,7 +870,7 @@ int main(int argc, char* argv[])
     {
         SDL_DestroyTexture(coins[i]);
     }
-    if (levelCompleted == false)
+    if (flag.levelCompleted == false)
     {
         for (int i = 0; i < 5; i++)
         {
