@@ -7,7 +7,7 @@
 #include "Collision.h"
 #include "Player.h"
 #include "Enemy.h"
-
+#include "Coin.h"
 
 using namespace std;
 
@@ -354,10 +354,14 @@ int main(int argc, char* argv[])
 
 
     //coin positions
-    vector<float> coinXPositions = { 525.f, 1575.f, 2075.f ,3275.f ,4375.f };
-    vector<float> coinYPositions = { 550.f, 350.f , 475.f, 475.f, 575.f };
-
-
+    vector<Coin> coinsList =
+    {
+        { 525.f, 550.f },
+        { 1575.f, 350.f },
+        { 2075.f, 475.f },
+        { 3275.f, 475.f },
+        { 4375.f, 575.f }
+    };
 
     const int numberOfFlagFrames = 6;
     SDL_Texture* flags[numberOfFlagFrames];
@@ -659,7 +663,7 @@ int main(int argc, char* argv[])
 
             if (currentTimeCheck - enemyTimer >= 3000.f)
             {
-                enemy.xPosition = 1800.f;
+                enemy.xPosition = 1800.f; 
                 enemy.yPosition = 580.f;
                 enemy.killed = false;
             }
@@ -667,23 +671,27 @@ int main(int argc, char* argv[])
 
 
         //Coin
-        for (int i = 0; i < 5; i++)
+        for(int i = 0; i < coinsList.size(); i++)
         {
 
-            if (collisionWithCoin(player.xPosition, player.yPosition, player.width, player.height,
-                coinXPositions[i], coinYPositions[i],
-                player.xVelocity, player.yVelocity, bottomReached,
-                coinCollected, coinWidth, coinHeight, coinCount))
+            if (!coinsList[i].collected &&
+                collisionWithCoin(player.xPosition, player.yPosition,
+                    player.width, player.height,
+                    coinsList[i].xPosition, coinsList[i].yPosition,
+                    player.xVelocity, player.yVelocity,
+                    bottomReached,
+                    coinsList[i].collected,
+                    coinWidth, coinHeight, coinCount))
             {
-                coinYPositions[i] = 2000.f;
+                
+                    SDL_DestroyTexture(textTexture7);
+                    SDL_DestroySurface(textSurface7);
 
-                SDL_DestroyTexture(textTexture7);
-                SDL_DestroySurface(textSurface7);
+                    coinText = "Coins: " + to_string(coinCount);
 
-                coinText = "Coins: " + to_string(coinCount);
-
-                textSurface7 = TTF_RenderText_Blended(font, coinText.c_str(), 0, primaryColour);
-                textTexture7 = SDL_CreateTextureFromSurface(renderer, textSurface7);
+                    textSurface7 = TTF_RenderText_Blended(font, coinText.c_str(), 0, primaryColour);
+                    textTexture7 = SDL_CreateTextureFromSurface(renderer, textSurface7);
+                
             }
 
         }
@@ -730,13 +738,20 @@ int main(int argc, char* argv[])
 
 
 
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < coinsList.size(); i++)
         {
-            //coin
-            SDL_GetTextureSize(coinTexture, &width, &height);
-            SDL_FRect rectCoins = { coinXPositions[i] - cameraX, coinYPositions[i], 45.0f, 45.0f * scaleHeight };
-            SDL_RenderTexture(renderer, coins[currentCoinFrame], NULL, &rectCoins);
+            if (!coinsList[i].collected)
+            {
+                SDL_FRect rectCoins =
+                {
+                    coinsList[i].xPosition - cameraX,
+                    coinsList[i].yPosition,
+                    45.0f,
+                    45.0f * scaleHeight
+                };
 
+                SDL_RenderTexture(renderer, coins[currentCoinFrame], NULL, &rectCoins);
+            }
         }
 
 
