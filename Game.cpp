@@ -2,6 +2,7 @@
 #include <SDL3/SDL.h>
 #include <string>
 #include <SDL3_image/SDL_image.h>
+#include "Collision.h"
 
 bool Game::init()
 {
@@ -220,57 +221,11 @@ void Game::run()
 
         handleEvents();
         update(deltaTime);
-        const bool* keys = SDL_GetKeyboardState(NULL);
 
-        player.rolling = false;
-        moving = false;
-        player.xVelocity = 0;
+        
 
-        if (flag.levelCompleted == false && gameStarted == true)
-        {
-            if (keys[SDL_SCANCODE_D])
-            {
-                player.xVelocity = speed;
-                player.xPosition += player.xVelocity * deltaTime;
-                player.facingRight = true;
-                moving = true;
-            }
 
-            if (keys[SDL_SCANCODE_A] && player.xPosition > 0.f)
-            {
-                player.xVelocity = -speed;
-                player.xPosition += player.xVelocity * deltaTime;
-                player.facingRight = false;
-                moving = true;
-            }
 
-            if (keys[SDL_SCANCODE_W] && player.xPosition > 0.f && moving)
-            {
-                player.rolling = true;
-                moving = false;
-                wWasPressed = keys[SDL_SCANCODE_W];
-
-                if (player.facingRight)
-                {
-                    player.xVelocity = 0;
-                    player.xVelocity += speed * deltaTime;
-                }
-                else
-                {
-                    player.xVelocity = 0;
-                    player.xVelocity += -speed * deltaTime;
-                }
-
-                player.xPosition += player.xVelocity * deltaTime;
-            }
-
-            if (keys[SDL_SCANCODE_SPACE] && player.onGround)
-            {
-                player.yVelocity = jumpStrength;
-                player.onGround = false;
-                bottomReached = false;
-            }
-        }
         render();
     }
 }
@@ -332,13 +287,191 @@ void Game::handleEvents()
 
 void Game::update(float deltaTime)
 {
+    //platform moving code
+    float previousXMovingPlatformPosition = xMovingPlatformPosition;
 
+    xMovingPlatformPosition += xMovingPlatformSpeed * xMovingPlatformDirection * deltaTime;
+
+    float xMovingPlatformDifference = xMovingPlatformPosition - previousXMovingPlatformPosition;
+
+    if (xMovingPlatformPosition < platformLimitLeft)
+    {
+        xMovingPlatformDirection = 1;
+    }
+    else if (xMovingPlatformPosition > platformLimitRight)
+    {
+        xMovingPlatformDirection = -1;
+    }
+
+
+    float previousYMovingPlatformPosition = yMovingPlatformPosition;
+
+    yMovingPlatformPosition += yMovingPlatformSpeed * yMovingPlatformDirection * deltaTime;
+
+    float yMovingPlatformDifference = yMovingPlatformPosition - previousYMovingPlatformPosition;
+
+    if (yMovingPlatformPosition < platformLimitTop)
+    {
+        yMovingPlatformDirection = 1;
+    }
+    else if (yMovingPlatformPosition > platformLimitBottom)
+    {
+        yMovingPlatformDirection = -1;
+    }
+
+
+    platforms =
+    {
+        {450.f, 650.f},
+        {xMovingPlatformPosition, 575.f},
+        {1500.f, 450.f},
+        {1800.f, 650.f},
+        {2000.f, 650.f},
+        {2200.f, 650.f},
+        {2600.f, yMovingPlatformPosition},
+        {3200.f, 550.f},
+        {3800.f, 650.f},
+        {4300.f, 650.f}
+    };
+
+
+
+
+    //Player input code
+    const bool* keys = SDL_GetKeyboardState(NULL);
+
+    player.rolling = false;
+    moving = false;
+    player.xVelocity = 0;
+
+    if (flag.levelCompleted == false && gameStarted == true)
+    {
+        if (keys[SDL_SCANCODE_D])
+        {
+            player.xVelocity = speed;
+            player.xPosition += player.xVelocity * deltaTime;
+            player.facingRight = true;
+            moving = true;
+        }
+
+        if (keys[SDL_SCANCODE_A] && player.xPosition > 0.f)
+        {
+            player.xVelocity = -speed;
+            player.xPosition += player.xVelocity * deltaTime;
+            player.facingRight = false;
+            moving = true;
+        }
+
+        if (keys[SDL_SCANCODE_W] && player.xPosition > 0.f && moving)
+        {
+            player.rolling = true;
+            moving = false;
+            wWasPressed = keys[SDL_SCANCODE_W];
+
+            if (player.facingRight)
+            {
+                player.xVelocity = 0;
+                player.xVelocity += speed * deltaTime;
+            }
+            else
+            {
+                player.xVelocity = 0;
+                player.xVelocity += -speed * deltaTime;
+            }
+
+            player.xPosition += player.xVelocity * deltaTime;
+        }
+
+        if (keys[SDL_SCANCODE_SPACE] && player.onGround)
+        {
+            player.yVelocity = jumpStrength;
+            player.onGround = false;
+            bottomReached = false;
+        }
+    }
+
+    //Collision and gravity code
+    if (bottomReached == false)
+    {
+        player.yVelocity += gravity * deltaTime;
+        player.yPosition += player.yVelocity * deltaTime;
+    }
+    else
+    {
+        bottomReached = false;
+    }
+
+    bottomReached = false;
+
+    for (int i = 0; i < platforms.size(); i++)
+    {
+        if (collision(player.xPosition, player.yPosition,
+            player.width, player.height,
+            platforms[i].xPosition, platforms[i].yPosition,
+            player.yVelocity, bottomReached,
+            screenWidth, screenHeight,
+            platforms[i].width, platforms[i].height,
+            player.xVelocity,
+            yMovingPlatformDifference,
+            xMovingPlatformDifference,
+            i,
+            xMovingPlatformDirection))
+        {
+            break;
+        }
+    }
+
+    // Ground collision
+    if (player.yPosition + player.height >= groundY)
+    {
+        player.yPosition = groundY - player.height;
+        player.yVelocity = 0.0f;
+        bottomReached = true;
+    }
+
+    player.onGround = bottomReached;
+
+    // Camera follows player
+    cameraX = player.xPosition - screenWidth / 2 + player.width / 2;
 }
 
 void Game::render()
 {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer);
+
+    float backgroundWidth = screenWidth;
+    float backgroundHeight = screenHeight;
+    float backgroundScrollX = cameraX * 0.1f;
+
+    while (backgroundScrollX >= backgroundWidth)
+    {
+        backgroundScrollX -= backgroundWidth;
+    }
+
+    while (backgroundScrollX < 0)
+    {
+        backgroundScrollX += backgroundWidth;
+    }
+
+    SDL_FRect background1 =
+    {
+        -backgroundScrollX,
+        0,
+        backgroundWidth,
+        backgroundHeight
+    };
+
+    SDL_FRect background2 =
+    {
+        backgroundWidth - backgroundScrollX,
+        0,
+        backgroundWidth,
+        backgroundHeight
+    };
+
+    SDL_RenderTexture(renderer, backgroundTexture, NULL, &background1);
+    SDL_RenderTexture(renderer, backgroundTexture, NULL, &background2);
 
     SDL_RenderPresent(renderer);
 }
