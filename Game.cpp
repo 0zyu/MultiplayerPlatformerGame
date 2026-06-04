@@ -1,5 +1,5 @@
 #include "Game.h"
-
+#include <SDL3/SDL.h>
 
 bool Game::init()
 {
@@ -40,7 +40,10 @@ bool Game::init()
 
 void Game::run()
 {
-
+    while (gameLoop)
+    {
+        handleEvents();
+    }
 }
 
 void Game::clean()
@@ -55,7 +58,15 @@ void Game::clean()
 
 void Game::handleEvents()
 {
+    SDL_Event event;
 
+    while (SDL_PollEvent(&event))
+    {
+        if (event.type == SDL_EVENT_QUIT)
+        {
+            gameLoop = false;
+        }
+    }
 }
 
 void Game::update(float deltaTime)

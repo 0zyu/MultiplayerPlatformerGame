@@ -9,6 +9,8 @@
 #include "Enemy.h"
 #include "Coin.h"
 #include "Game.h"
+#include "Platform.h"
+
 using namespace std;
 
 
@@ -423,9 +425,20 @@ int main(int argc, char* argv[])
         }
 
 
-        //platform positions
-        vector<float> platformXPositions = { 450.f, xMovingPlatformPosition, 1500.f ,1800.f ,2000.f ,2200.f ,2600.f ,3200.f ,3800.f ,4300.f };
-        vector<float> platformYPositions = { 650.f, 575.f , 450.f, 650.f, 650.f, 650.f, yMovingPlatformPosition, 550.f, 650.f, 650.f };
+        
+        vector<Platform> platforms =
+        {
+            {450.f, 650.f},
+            {xMovingPlatformPosition, 575.f},
+            {1500.f, 450.f},
+            {1800.f, 650.f},
+            {2000.f, 650.f},
+            {2200.f, 650.f},
+            {2600.f, yMovingPlatformPosition},
+            {3200.f, 550.f},
+            {3800.f, 650.f},
+            {4300.f, 650.f}
+        };
 
         while (SDL_PollEvent(&event))
         {
@@ -566,9 +579,17 @@ int main(int argc, char* argv[])
         for (int i = 0; i < numberOfPlatforms; i++)
         {
 
-            if (collision(player.xPosition, player.yPosition, player.width, player.height, platformXPositions[i], platformYPositions[i],
-                player.yVelocity, bottomReached, screenWidth, screenHeight, platformWidth, platformHeight, player.xVelocity, yMovingPlatformDifference,
-                xMovingPlatformDifference, i, xMovingPlatformDirection)
+            if (collision(player.xPosition, player.yPosition,
+                player.width, player.height,
+                platforms[i].xPosition, platforms[i].yPosition,
+                player.yVelocity, bottomReached,
+                screenWidth, screenHeight,
+                platforms[i].width, platforms[i].height,
+                player.xVelocity,
+                yMovingPlatformDifference,
+                xMovingPlatformDifference,
+                i,
+                xMovingPlatformDirection)
                 )
             {
 
@@ -733,7 +754,13 @@ int main(int argc, char* argv[])
         for (int i = 0; i < numberOfPlatforms; i++)
         {
             SDL_GetTextureSize(platformTexture, &width, &height);
-            SDL_FRect rectPlatforms = { platformXPositions[i] - cameraX, platformYPositions[i], platformWidth, platformHeight };
+            SDL_FRect rectPlatforms =
+            {
+                platforms[i].xPosition - cameraX,
+                platforms[i].yPosition,
+                platforms[i].width,
+                platforms[i].height
+            };
             SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatforms);
         }
 
