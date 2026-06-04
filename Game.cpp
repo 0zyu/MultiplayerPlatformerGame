@@ -287,6 +287,13 @@ void Game::handleEvents()
 
 void Game::update(float deltaTime)
 {
+    const bool* keys = SDL_GetKeyboardState(NULL);
+
+    if (gameStarted == false && keys[SDL_SCANCODE_SPACE])
+    {
+        gameStarted = true;
+    }
+
     //platform moving code
     float previousXMovingPlatformPosition = xMovingPlatformPosition;
 
@@ -337,8 +344,7 @@ void Game::update(float deltaTime)
 
 
 
-    //Player input code
-    const bool* keys = SDL_GetKeyboardState(NULL);
+   
 
     player.rolling = false;
     moving = false;
@@ -420,6 +426,17 @@ void Game::update(float deltaTime)
     {
         player.currentFrameRolling = 0;
     }
+
+    //Coin animation code
+    Uint64 currentTime = SDL_GetTicks();
+
+    if (currentTime - lastCoinFrameTime >= coinFrameDelay)
+    {
+        currentCoinFrame = (currentCoinFrame + 1) % numberOfCoinFrames;
+        lastCoinFrameTime = currentTime;
+    }
+
+
     //Collision and gravity code
     if (bottomReached == false)
     {
@@ -463,6 +480,23 @@ void Game::update(float deltaTime)
 
     // Camera follows player
     cameraX = player.xPosition - screenWidth / 2 + player.width / 2;
+
+    //Coin collision code
+    for (int i = 0; i < coinsList.size(); i++)
+    {
+        if (!coinsList[i].collected &&
+            collisionWithCoin(player.xPosition, player.yPosition,
+                player.width, player.height,
+                coinsList[i].xPosition, coinsList[i].yPosition,
+                player.xVelocity, player.yVelocity,
+                bottomReached,
+                coinsList[i].collected,
+                coinWidth, coinHeight, coinCount))
+        {
+            // coinCount already increases inside collisionWithCoin()
+        }
+    }
+
 }
 
 void Game::render()
@@ -554,6 +588,23 @@ void Game::render()
         SDL_RenderTexture(renderer, platformTexture, NULL, &rectPlatform);
     }
 
+    //Coins
+   
+    for (int i = 0; i < coinsList.size(); i++)
+    {
+        if (!coinsList[i].collected)
+        {
+            SDL_FRect rectCoin =
+            {
+                coinsList[i].xPosition - cameraX,
+                coinsList[i].yPosition,
+                45.0f,
+                45.0f * scaleHeight
+            };
+
+            SDL_RenderTexture(renderer, coinFrames[currentCoinFrame], NULL, &rectCoin);
+        }
+    }
     // Player rendering
     SDL_FRect rectKnight =
     {
