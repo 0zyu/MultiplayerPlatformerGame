@@ -396,6 +396,18 @@ void Game::update(float deltaTime)
         }
     }
 
+    //Enemy movement code
+    enemy.xPosition += enemy.speed * enemy.direction * deltaTime;
+
+    if (enemy.xPosition <= 1800.f)
+    {
+        enemy.direction = 1;
+    }
+    else if (enemy.xPosition >= 2300.f)
+    {
+        enemy.direction = -1;
+    }
+
 	//Player animation code
     if (moving)
     {
@@ -436,6 +448,23 @@ void Game::update(float deltaTime)
         lastCoinFrameTime = currentTime;
     }
 
+    //Flag animation code
+
+    if (flag.levelCompleted == false)
+    {
+        if (currentTime - lastFlagFrameTime >= flag.frameDelay)
+        {
+            flag.currentFrame = (flag.currentFrame + 1) % numberOfFlagFrames;
+            lastFlagFrameTime = currentTime;
+        }
+    }
+
+	//Enemy animation code
+    if (currentTime - lastEnemyFrameTime >= enemy.frameDelay)
+    {
+        enemy.currentFrame = (enemy.currentFrame + 1) % numberOfFramesForEnemy;
+        lastEnemyFrameTime = currentTime;
+    }
 
     //Collision and gravity code
     if (bottomReached == false)
@@ -484,17 +513,52 @@ void Game::update(float deltaTime)
     //Coin collision code
     for (int i = 0; i < coinsList.size(); i++)
     {
-        if (!coinsList[i].collected &&
+        if (!coinsList[i].collected)
+        {
             collisionWithCoin(player.xPosition, player.yPosition,
                 player.width, player.height,
                 coinsList[i].xPosition, coinsList[i].yPosition,
                 player.xVelocity, player.yVelocity,
                 bottomReached,
                 coinsList[i].collected,
-                coinWidth, coinHeight, coinCount))
-        {
-            // coinCount already increases inside collisionWithCoin()
+                coinWidth, coinHeight, coinCount);
         }
+    }
+
+    //Collision with enemy
+    collisionWithEnemy(
+        player.xPosition, player.yPosition,
+        player.width, player.height,
+        enemy.xPosition, enemy.yPosition,
+        player.xVelocity, player.yVelocity,
+        bottomReached,
+        enemy.killed,
+        enemyTimer,
+        enemy.width,
+        enemy.height
+    );
+
+    //Respawn logic
+    if (enemy.killed == true)
+    {
+        Uint64 currentTimeCheck = SDL_GetTicks();
+
+        if (currentTimeCheck - enemyTimer >= 3000.f)
+        {
+            enemy.xPosition = 1800.f;
+            enemy.yPosition = 575.f;
+            enemy.killed = false;
+        }
+    }
+
+
+    //Flag collision code
+    if (collisionWithFlag(player.xPosition, player.yPosition,
+        player.width, player.height,
+        flag.xPosition, flag.yPosition,
+        flag.width, flag.height) && flag.levelCompleted == false)
+    {
+        flag.levelCompleted = true;
     }
 
 }
@@ -605,6 +669,31 @@ void Game::render()
             SDL_RenderTexture(renderer, coinFrames[currentCoinFrame], NULL, &rectCoin);
         }
     }
+
+    //Flag rendering
+
+    SDL_FRect rectFlag =
+    {
+        flag.xPosition - cameraX,
+        flag.yPosition,
+        (float)flag.width,
+        (float)flag.height
+    };
+
+    SDL_RenderTexture(renderer, flagFrames[flag.currentFrame], NULL, &rectFlag);
+
+
+    //Enemy rendering
+    SDL_FRect rectEnemy =
+    {
+        enemy.xPosition - cameraX,
+        enemy.yPosition,
+        enemy.width * scaleWidth,
+        (float)enemy.height
+    };
+
+    SDL_RenderTexture(renderer, enemyRunFrameForwards[enemy.currentFrame], NULL, &rectEnemy);
+
     // Player rendering
     SDL_FRect rectKnight =
     {

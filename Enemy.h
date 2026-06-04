@@ -5,7 +5,7 @@
 struct Enemy
 {
     float xPosition = 1800.f;
-    float yPosition = 580.f;
+    float yPosition = 575.f;
 
     float speed = 100.f;
     int direction = 1;
