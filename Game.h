@@ -39,6 +39,19 @@ private:
     SDL_Texture* coinTexture = nullptr;
     SDL_Texture* flagTexture = nullptr;
 
+    static const int numberOfFramesForKnight = 8;
+    static const int numberOfFramesForEnemy = 12;
+    static const int numberOfCoinFrames = 8;
+    static const int numberOfFlagFrames = 6;
+
+    SDL_Texture* runFramesForwards[numberOfFramesForKnight];
+    SDL_Texture* runFramesBackwards[numberOfFramesForKnight];
+    SDL_Texture* rollingRightAnimation[numberOfFramesForKnight];
+    SDL_Texture* rollingLeftAnimation[numberOfFramesForKnight];
+
+    SDL_Texture* enemyRunFrameForwards[numberOfFramesForEnemy];
+    SDL_Texture* coinFrames[numberOfCoinFrames];
+    SDL_Texture* flagFrames[numberOfFlagFrames];
 
     SDL_Event event;
 

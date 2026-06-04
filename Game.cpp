@@ -1,5 +1,7 @@
 #include "Game.h"
 #include <SDL3/SDL.h>
+#include <string>
+#include <SDL3_image/SDL_image.h>
 
 bool Game::init()
 {
@@ -75,6 +77,115 @@ bool Game::init()
     SDL_SetTextureScaleMode(platformTexture, SDL_SCALEMODE_NEAREST);
     SDL_SetTextureScaleMode(groundTexture, SDL_SCALEMODE_NEAREST);
 
+
+    for (int i = 0; i < numberOfFramesForKnight; i++)
+    {
+        std::string filePath = "assets/knightSprite" + std::to_string(i + 1) + ".png";
+        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+
+        if (!tempSurface)
+        {
+            return false;
+        }
+
+        runFramesForwards[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
+        SDL_SetTextureScaleMode(runFramesForwards[i], SDL_SCALEMODE_NEAREST);
+        SDL_DestroySurface(tempSurface);
+    }
+
+    for (int i = 0; i < numberOfFramesForKnight; i++)
+    {
+        std::string filePath = "assets/knightSpriteReverse" + std::to_string(i + 1) + ".png";
+        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+
+        if (!tempSurface)
+        {
+            return false;
+        }
+
+        runFramesBackwards[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
+        SDL_SetTextureScaleMode(runFramesBackwards[i], SDL_SCALEMODE_NEAREST);
+        SDL_DestroySurface(tempSurface);
+    }
+
+    for (int i = 0; i < numberOfFramesForKnight; i++)
+    {
+        std::string filePath = "assets/rollRight" + std::to_string(i + 1) + ".png";
+        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+
+        if (!tempSurface)
+        {
+            return false;
+        }
+
+        rollingRightAnimation[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
+        SDL_SetTextureScaleMode(rollingRightAnimation[i], SDL_SCALEMODE_NEAREST);
+        SDL_DestroySurface(tempSurface);
+    }
+
+    for (int i = 0; i < numberOfFramesForKnight; i++)
+    {
+        std::string filePath = "assets/rollLeft" + std::to_string(i + 1) + ".png";
+        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+
+        if (!tempSurface)
+        {
+            return false;
+        }
+
+        rollingLeftAnimation[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
+        SDL_SetTextureScaleMode(rollingLeftAnimation[i], SDL_SCALEMODE_NEAREST);
+        SDL_DestroySurface(tempSurface);
+    }
+
+    for (int i = 0; i < numberOfFramesForEnemy; i++)
+    {
+        std::string filePath = "assets/enemy" + std::to_string(i + 1) + ".png";
+        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+
+        if (!tempSurface)
+        {
+            return false;
+        }
+
+        enemyRunFrameForwards[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
+        SDL_SetTextureScaleMode(enemyRunFrameForwards[i], SDL_SCALEMODE_NEAREST);
+        SDL_DestroySurface(tempSurface);
+    }
+
+    for (int i = 0; i < numberOfCoinFrames; i++)
+    {
+        std::string filePath = "assets/coin" + std::to_string(i + 1) + ".png";
+        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+
+        if (!tempSurface)
+        {
+            return false;
+        }
+
+        coinFrames[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
+        SDL_SetTextureScaleMode(coinFrames[i], SDL_SCALEMODE_NEAREST);
+        SDL_DestroySurface(tempSurface);
+    }
+
+    for (int i = 0; i < numberOfFlagFrames; i++)
+    {
+        std::string filePath = "assets/betterflag" + std::to_string(i + 1) + ".png";
+        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+
+        if (!tempSurface)
+        {
+            return false;
+        }
+
+        flagFrames[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
+        SDL_SetTextureScaleMode(flagFrames[i], SDL_SCALEMODE_NEAREST);
+        SDL_DestroySurface(tempSurface);
+    }
+
+
+
+
     SDL_DestroySurface(surfaceFlag);
     SDL_DestroySurface(surfaceCoin);
     SDL_DestroySurface(surfaceRolling);
@@ -101,6 +212,30 @@ void Game::run()
 
 void Game::clean()
 {
+
+    for (int i = 0; i < numberOfFramesForKnight; i++)
+    {
+        SDL_DestroyTexture(runFramesForwards[i]);
+        SDL_DestroyTexture(runFramesBackwards[i]);
+        SDL_DestroyTexture(rollingRightAnimation[i]);
+        SDL_DestroyTexture(rollingLeftAnimation[i]);
+    }
+
+    for (int i = 0; i < numberOfFramesForEnemy; i++)
+    {
+        SDL_DestroyTexture(enemyRunFrameForwards[i]);
+    }
+
+    for (int i = 0; i < numberOfCoinFrames; i++)
+    {
+        SDL_DestroyTexture(coinFrames[i]);
+    }
+
+    for (int i = 0; i < numberOfFlagFrames; i++)
+    {
+        SDL_DestroyTexture(flagFrames[i]);
+    }
+
     SDL_DestroyTexture(flagTexture);
     SDL_DestroyTexture(coinTexture);
     SDL_DestroyTexture(rollingTexture);
@@ -109,6 +244,7 @@ void Game::clean()
     SDL_DestroyTexture(knightTexture);
     SDL_DestroyTexture(platformTexture);
     SDL_DestroyTexture(groundTexture);
+    
 
     TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
