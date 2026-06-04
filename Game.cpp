@@ -34,6 +34,15 @@ bool Game::init()
         return false;
     }
 
+    coinsList =
+    {
+        { 525.f, 550.f },
+        { 1575.f, 350.f },
+        { 2075.f, 475.f },
+        { 3275.f, 475.f },
+        { 4375.f, 575.f }
+    };
+
     return true;
 }
 
