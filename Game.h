@@ -29,7 +29,6 @@ private:
     void update(float deltaTime);
     void render();
 
-
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
 
@@ -38,6 +37,8 @@ private:
     SDL_Texture* backgroundTexture = nullptr;
     SDL_Texture* groundTexture = nullptr;
     SDL_Texture* platformTexture = nullptr;
+    SDL_Texture* loadTexture(const std::string& filePath);
+
 	
     
 

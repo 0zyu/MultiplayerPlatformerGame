@@ -4,6 +4,27 @@
 #include <SDL3_image/SDL_image.h>
 #include "Collision.h"
 
+SDL_Texture* Game::loadTexture(const std::string& filePath)
+{
+    SDL_Surface* surface = IMG_Load(filePath.c_str());
+
+    if (!surface)
+    {
+        return nullptr;
+    }
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+    if (texture)
+    {
+        SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+    }
+
+    SDL_DestroySurface(surface);
+
+    return texture;
+}
+
 bool Game::init()
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -92,13 +113,14 @@ bool Game::init()
         return false;
     }
 
-    
-    backgroundTexture = SDL_CreateTextureFromSurface(renderer, surfaceBackground);
+    backgroundTexture = loadTexture("assets/Clouds.png");
+    platformTexture = loadTexture("assets/platform.png");
+    groundTexture = loadTexture("assets/ground.png");
 
-  
-    platformTexture = SDL_CreateTextureFromSurface(renderer, surfacePlatform);
-    groundTexture = SDL_CreateTextureFromSurface(renderer, surfaceGround);
-
+    if (!backgroundTexture || !platformTexture || !groundTexture)
+    {
+        return false;
+    }
    
 
     SDL_SetTextureScaleMode(platformTexture, SDL_SCALEMODE_NEAREST);
