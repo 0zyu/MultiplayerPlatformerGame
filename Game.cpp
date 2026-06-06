@@ -130,106 +130,78 @@ bool Game::init()
     for (int i = 0; i < numberOfFramesForKnight; i++)
     {
         std::string filePath = "assets/knightSprite" + std::to_string(i + 1) + ".png";
-        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+        runFramesForwards[i] = loadTexture(filePath);
 
-        if (!tempSurface)
+        if (!runFramesForwards[i])
         {
             return false;
         }
-
-        runFramesForwards[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
-        SDL_SetTextureScaleMode(runFramesForwards[i], SDL_SCALEMODE_NEAREST);
-        SDL_DestroySurface(tempSurface);
     }
 
     for (int i = 0; i < numberOfFramesForKnight; i++)
     {
         std::string filePath = "assets/knightSpriteReverse" + std::to_string(i + 1) + ".png";
-        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+        runFramesBackwards[i] = loadTexture(filePath);
 
-        if (!tempSurface)
+        if (!runFramesBackwards[i])
         {
             return false;
         }
-
-        runFramesBackwards[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
-        SDL_SetTextureScaleMode(runFramesBackwards[i], SDL_SCALEMODE_NEAREST);
-        SDL_DestroySurface(tempSurface);
     }
 
     for (int i = 0; i < numberOfFramesForKnight; i++)
     {
         std::string filePath = "assets/rollRight" + std::to_string(i + 1) + ".png";
-        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+        rollingRightAnimation[i] = loadTexture(filePath);
 
-        if (!tempSurface)
+        if (!rollingRightAnimation[i])
         {
             return false;
         }
-
-        rollingRightAnimation[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
-        SDL_SetTextureScaleMode(rollingRightAnimation[i], SDL_SCALEMODE_NEAREST);
-        SDL_DestroySurface(tempSurface);
     }
 
     for (int i = 0; i < numberOfFramesForKnight; i++)
     {
         std::string filePath = "assets/rollLeft" + std::to_string(i + 1) + ".png";
-        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+        rollingLeftAnimation[i] = loadTexture(filePath);
 
-        if (!tempSurface)
+        if (!rollingLeftAnimation[i])
         {
             return false;
         }
-
-        rollingLeftAnimation[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
-        SDL_SetTextureScaleMode(rollingLeftAnimation[i], SDL_SCALEMODE_NEAREST);
-        SDL_DestroySurface(tempSurface);
     }
 
     for (int i = 0; i < numberOfFramesForEnemy; i++)
     {
         std::string filePath = "assets/enemy" + std::to_string(i + 1) + ".png";
-        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+        enemyRunFrameForwards[i] = loadTexture(filePath);
 
-        if (!tempSurface)
+        if (!enemyRunFrameForwards[i])
         {
             return false;
         }
-
-        enemyRunFrameForwards[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
-        SDL_SetTextureScaleMode(enemyRunFrameForwards[i], SDL_SCALEMODE_NEAREST);
-        SDL_DestroySurface(tempSurface);
     }
 
     for (int i = 0; i < numberOfCoinFrames; i++)
     {
         std::string filePath = "assets/coin" + std::to_string(i + 1) + ".png";
-        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+        coinFrames[i] = loadTexture(filePath);
 
-        if (!tempSurface)
+        if (!coinFrames[i])
         {
             return false;
         }
-
-        coinFrames[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
-        SDL_SetTextureScaleMode(coinFrames[i], SDL_SCALEMODE_NEAREST);
-        SDL_DestroySurface(tempSurface);
     }
 
     for (int i = 0; i < numberOfFlagFrames; i++)
     {
         std::string filePath = "assets/betterflag" + std::to_string(i + 1) + ".png";
-        SDL_Surface* tempSurface = IMG_Load(filePath.c_str());
+        flagFrames[i] = loadTexture(filePath);
 
-        if (!tempSurface)
+        if (!flagFrames[i])
         {
             return false;
         }
-
-        flagFrames[i] = SDL_CreateTextureFromSurface(renderer, tempSurface);
-        SDL_SetTextureScaleMode(flagFrames[i], SDL_SCALEMODE_NEAREST);
-        SDL_DestroySurface(tempSurface);
     }
 
     SDL_DestroySurface(surfaceBackground);
