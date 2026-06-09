@@ -126,6 +126,7 @@ void NetworkManager::pollEvents()
     }
 }
 
+
 void NetworkManager::clean()
 {
     if (host)
