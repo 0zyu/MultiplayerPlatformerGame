@@ -22,9 +22,9 @@ bool NetworkManager::hostServer()
         return false;
     }
 
-    ENetAddress address;
-    address.host = ENET_HOST_ANY;
-    address.port = 1234;
+	ENetAddress address; //address struct to hold the address and port we want to host on
+	address.host = ENET_HOST_ANY; //ENET_HOST_ANY is a constant that tells ENet to listen on all available network interfaces
+	address.port = 1234; //the port we want to host on, this can be any port number that is not being used by another application
 
     host = enet_host_create(
         &address,
@@ -34,7 +34,7 @@ bool NetworkManager::hostServer()
         0
     );
 
-    if (!host)
+	if (host == nullptr) //if host doesnt point to anything then it failed to create a host
     {
         std::cout << "Failed to host server\n";
         return false;
@@ -56,6 +56,7 @@ bool NetworkManager::connectToServer(const char* ipAddress)
         return false;
     }
 
+	// ENet creates the networking object somewhere in memory and gives you back its address
     host = enet_host_create(
         nullptr,
         1,
@@ -64,7 +65,8 @@ bool NetworkManager::connectToServer(const char* ipAddress)
         0
     );
 
-    if (!host)
+    //Therefore now we have the objects address host now pointing to a real ENet networking object
+    if (host == nullptr)
     {
         std::cout << "Failed to create client\n";
         return false;
@@ -76,7 +78,7 @@ bool NetworkManager::connectToServer(const char* ipAddress)
 
     peer = enet_host_connect(host, &address, 2, 0);
 
-    if (!peer)
+    if (peer == nullptr)
     {
         std::cout << "Failed to create connection peer\n";
         enet_host_destroy(host);
@@ -94,7 +96,7 @@ bool NetworkManager::connectToServer(const char* ipAddress)
 
 void NetworkManager::pollEvents()
 {
-    if (!host)
+    if (host == nullptr)
     {
         return;
     }
@@ -105,11 +107,11 @@ void NetworkManager::pollEvents()
     {
         if (event.type == ENET_EVENT_TYPE_CONNECT)
         {
-            if (isServer)
+            if (isServer == true)
             {
                 std::cout << "Client connected to server\n";
             }
-            else if (isClient)
+            else if (isClient == true)
             {
                 std::cout << "Connected to server\n";
             }
@@ -126,17 +128,16 @@ void NetworkManager::pollEvents()
     }
 }
 
-
 void NetworkManager::clean()
 {
-    if (host)
+    if (host != nullptr)
     {
         enet_host_destroy(host);
         host = nullptr;
         peer = nullptr;
     }
 
-    if (enetStarted)
+    if (enetStarted == true)
     {
         enet_deinitialize();
         enetStarted = false;
