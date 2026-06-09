@@ -11,7 +11,7 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "Coin.h"
-
+#include "NetworkManager.h"
 #include "Platform.h"
 #include "Flag.h"
 
@@ -25,6 +25,8 @@ public:
     void clean();
 
 private:
+    NetworkManager network;
+
     void handleEvents();
     void update(float deltaTime);
     void render();

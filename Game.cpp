@@ -27,6 +27,7 @@ SDL_Texture* Game::loadTexture(const std::string& filePath)
 
 bool Game::init()
 {
+	
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         return false;
@@ -36,6 +37,13 @@ bool Game::init()
     {
         return false;
     }
+
+    // Initialize ENet, if it didnt then it returns false and the game will not run
+    if (!network.init())
+    {
+        return false;
+    }
+
 
     font = TTF_OpenFont("assets/PixelOperator8-Bold.ttf", 95);
 
@@ -285,6 +293,8 @@ void Game::clean()
     TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+
+    network.clean();
 
     TTF_Quit();
     SDL_Quit();
