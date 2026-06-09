@@ -307,6 +307,7 @@ void Game::clean()
 
 
 
+
 void Game::handleEvents()
 {
     while (SDL_PollEvent(&event))
@@ -314,6 +315,19 @@ void Game::handleEvents()
         if (event.type == SDL_EVENT_QUIT)
         {
             gameLoop = false;
+        }
+
+        if (event.type == SDL_EVENT_KEY_DOWN)
+        {
+            if (event.key.scancode == SDL_SCANCODE_H)
+            {
+                network.hostServer();
+            }
+
+            if (event.key.scancode == SDL_SCANCODE_J)
+            {
+                network.connectToServer("127.0.0.1");
+            }
         }
     }
 }
@@ -325,8 +339,11 @@ void Game::handleEvents()
 
 
 
+
 void Game::update(float deltaTime)
 {
+    network.pollEvents();
+
     const bool* keys = SDL_GetKeyboardState(NULL);
 
     if (gameStarted == false && keys[SDL_SCANCODE_SPACE])
