@@ -111,6 +111,8 @@ private:
     Uint64 lastFrameTimeRolling = 0;
     Uint64 lastFlagFrameTime = 0;
     Uint64 enemyTimer = 0;
+    Uint64 lastInputSendTime = 0;
+    int inputSendDelay = 33;
 
     // Animation
     int frameDelay = 100;

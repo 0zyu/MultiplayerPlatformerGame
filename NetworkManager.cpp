@@ -122,12 +122,12 @@ void NetworkManager::pollEvents()
             {
                 PlayerInputPacket* inputPacket = (PlayerInputPacket*)event.packet->data;
 
-                std::cout << "Input received - "
-                    << "Left: " << inputPacket->left
-                    << " Right: " << inputPacket->right
-                    << " Jump: " << inputPacket->jump
-                    << " Roll: " << inputPacket->roll
-                    << "\n";
+               //std::cout << "Input received - "
+               //    << "Left: " << inputPacket->left
+               //    << " Right: " << inputPacket->right
+               //    << " Jump: " << inputPacket->jump
+               //    << " Roll: " << inputPacket->roll
+               //    << "\n";
             }
 
             enet_packet_destroy(event.packet);
@@ -162,7 +162,7 @@ void NetworkManager::sendInput(bool left, bool right, bool jump, bool roll)
     ENetPacket* packet = enet_packet_create(
         &inputPacket,
         sizeof(PlayerInputPacket),
-        ENET_PACKET_FLAG_RELIABLE
+        0
     );
 
     enet_peer_send(peer, 0, packet);

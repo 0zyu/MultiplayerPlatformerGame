@@ -347,12 +347,19 @@ void Game::update(float deltaTime)
     const bool* keys = SDL_GetKeyboardState(NULL);
 
 
-    network.sendInput(
-        keys[SDL_SCANCODE_A],
-        keys[SDL_SCANCODE_D],
-        keys[SDL_SCANCODE_SPACE],
-        keys[SDL_SCANCODE_W]
-    );
+    Uint64 currentInputTime = SDL_GetTicks();
+
+    if (currentInputTime - lastInputSendTime >= inputSendDelay)
+    {
+        network.sendInput(
+            keys[SDL_SCANCODE_A],
+            keys[SDL_SCANCODE_D],
+            keys[SDL_SCANCODE_SPACE],
+            keys[SDL_SCANCODE_W]
+        );
+
+        lastInputSendTime = currentInputTime;
+    }
 
 
     if (gameStarted == false && keys[SDL_SCANCODE_SPACE])
