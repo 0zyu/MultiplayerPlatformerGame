@@ -3,9 +3,21 @@
 #include <enet/enet.h>
 #include <iostream>
 
+
+struct PlayerInputPacket
+{
+    bool left = false;
+    bool right = false;
+    bool jump = false;
+    bool roll = false;
+};
+
+
 class NetworkManager
 {
 public:
+    void sendInput(bool left, bool right, bool jump, bool roll);
+
     bool init();
     void clean();
 

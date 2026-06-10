@@ -118,7 +118,18 @@ void NetworkManager::pollEvents()
         }
         else if (event.type == ENET_EVENT_TYPE_RECEIVE)
         {
-            std::cout << "Packet received\n";
+            if (event.packet->dataLength == sizeof(PlayerInputPacket))
+            {
+                PlayerInputPacket* inputPacket = (PlayerInputPacket*)event.packet->data;
+
+                std::cout << "Input received - "
+                    << "Left: " << inputPacket->left
+                    << " Right: " << inputPacket->right
+                    << " Jump: " << inputPacket->jump
+                    << " Roll: " << inputPacket->roll
+                    << "\n";
+            }
+
             enet_packet_destroy(event.packet);
         }
         else if (event.type == ENET_EVENT_TYPE_DISCONNECT)
@@ -127,6 +138,38 @@ void NetworkManager::pollEvents()
         }
     }
 }
+
+
+
+void NetworkManager::sendInput(bool left, bool right, bool jump, bool roll)
+{
+    if (isClient == false)
+    {
+        return;
+    }
+
+    if (peer == nullptr)
+    {
+        return;
+    }
+
+    PlayerInputPacket inputPacket;
+    inputPacket.left = left;
+    inputPacket.right = right;
+    inputPacket.jump = jump;
+    inputPacket.roll = roll;
+
+    ENetPacket* packet = enet_packet_create(
+        &inputPacket,
+        sizeof(PlayerInputPacket),
+        ENET_PACKET_FLAG_RELIABLE
+    );
+
+    enet_peer_send(peer, 0, packet);
+    enet_host_flush(host);
+}
+
+
 
 void NetworkManager::clean()
 {

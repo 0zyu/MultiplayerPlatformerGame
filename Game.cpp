@@ -346,6 +346,15 @@ void Game::update(float deltaTime)
 
     const bool* keys = SDL_GetKeyboardState(NULL);
 
+
+    network.sendInput(
+        keys[SDL_SCANCODE_A],
+        keys[SDL_SCANCODE_D],
+        keys[SDL_SCANCODE_SPACE],
+        keys[SDL_SCANCODE_W]
+    );
+
+
     if (gameStarted == false && keys[SDL_SCANCODE_SPACE])
     {
         gameStarted = true;
