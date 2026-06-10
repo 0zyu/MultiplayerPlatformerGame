@@ -74,10 +74,8 @@ bool Game::init()
         { 3275.f, 475.f },
         { 4375.f, 575.f }
     };
-
     otherPlayer.xPosition = 300.f;
-    otherPlayer.yPosition = 500.f;
-
+    otherPlayer.yPosition = groundY - otherPlayer.height;
 
     //Text
     SDL_Surface* titleTextSurface = TTF_RenderText_Blended(font, "Knight Jump!", 0, primaryColour);
@@ -885,6 +883,26 @@ void Game::render()
         100.0f,
         100.0f * scaleHeight
     };
+
+    if (network.getIsServer() == true)
+    {
+        SDL_FRect rectOtherKnight =
+        {
+            otherPlayer.xPosition - cameraX,
+            otherPlayer.yPosition,
+            100.0f,
+            100.0f * scaleHeight
+        };
+
+        if (otherPlayer.facingRight == true)
+        {
+            SDL_RenderTexture(renderer, runFramesForwards[1], NULL, &rectOtherKnight);
+        }
+        else
+        {
+            SDL_RenderTexture(renderer, runFramesBackwards[1], NULL, &rectOtherKnight);
+        }
+    }
 
     SDL_FRect rollingKnight =
     {
