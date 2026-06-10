@@ -16,14 +16,17 @@ struct PlayerInputPacket
 class NetworkManager
 {
 public:
-    void sendInput(bool left, bool right, bool jump, bool roll);
-
+    
     bool init();
     void clean();
 
     bool hostServer();
     bool connectToServer(const char* ipAddress);
     void pollEvents();
+
+    void sendInput(bool left, bool right, bool jump, bool roll);
+    PlayerInputPacket getLatestClientInput();
+
 
 private:
     bool enetStarted = false;
@@ -33,4 +36,6 @@ private:
 
     bool isServer = false;
     bool isClient = false;
+
+    PlayerInputPacket latestClientInput;
 };
