@@ -77,6 +77,7 @@ private:
     SDL_Event event;
 
     Player player;
+    Player otherPlayer;
     Enemy enemy;
     Flag flag;
 

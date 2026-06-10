@@ -174,6 +174,16 @@ PlayerInputPacket NetworkManager::getLatestClientInput()
     return latestClientInput;
 }
 
+bool NetworkManager::getIsServer()
+{
+    return isServer;
+}
+
+bool NetworkManager::getIsClient()
+{
+    return isClient;
+}
+
 void NetworkManager::clean()
 {
     if (host != nullptr)

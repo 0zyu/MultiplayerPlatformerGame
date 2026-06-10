@@ -75,6 +75,10 @@ bool Game::init()
         { 4375.f, 575.f }
     };
 
+    otherPlayer.xPosition = 300.f;
+    otherPlayer.yPosition = 500.f;
+
+
     //Text
     SDL_Surface* titleTextSurface = TTF_RenderText_Blended(font, "Knight Jump!", 0, primaryColour);
     SDL_Surface* titleShadowSurface = TTF_RenderText_Blended(font, "Knight Jump!", 0, secondaryColour);
@@ -343,9 +347,14 @@ void Game::handleEvents()
 void Game::update(float deltaTime)
 {
     network.pollEvents();
+    
 
     const bool* keys = SDL_GetKeyboardState(NULL);
 
+    if (gameStarted == false && keys[SDL_SCANCODE_SPACE])
+    {
+        gameStarted = true;
+    }
 
     Uint64 currentInputTime = SDL_GetTicks();
 
@@ -361,11 +370,32 @@ void Game::update(float deltaTime)
         lastInputSendTime = currentInputTime;
     }
 
-
-    if (gameStarted == false && keys[SDL_SCANCODE_SPACE])
+    //Other Player movement code
+    if (network.getIsServer() == true)
     {
-        gameStarted = true;
+        PlayerInputPacket clientInput = network.getLatestClientInput();
+
+        otherPlayer.xVelocity = 0;
+
+        if (clientInput.right == true)
+        {
+            otherPlayer.xVelocity = speed;
+            otherPlayer.xPosition += otherPlayer.xVelocity * deltaTime;
+            otherPlayer.facingRight = true;
+        }
+
+        if (clientInput.left == true && otherPlayer.xPosition > 0.f)
+        {
+            otherPlayer.xVelocity = -speed;
+            otherPlayer.xPosition += otherPlayer.xVelocity * deltaTime;
+            otherPlayer.facingRight = false;
+        }
+
+        
     }
+
+
+
 
     //platform moving code
     float previousXMovingPlatformPosition = xMovingPlatformPosition;
@@ -606,6 +636,7 @@ void Game::update(float deltaTime)
         }
     }
 
+    
     //Collision with enemy
     collisionWithEnemy(
         player.xPosition, player.yPosition,

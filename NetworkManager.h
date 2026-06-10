@@ -27,6 +27,8 @@ public:
     void sendInput(bool left, bool right, bool jump, bool roll);
     PlayerInputPacket getLatestClientInput();
 
+    bool getIsServer();
+    bool getIsClient();
 
 private:
     bool enetStarted = false;
