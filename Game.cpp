@@ -389,9 +389,26 @@ void Game::update(float deltaTime)
             otherPlayer.facingRight = false;
         }
 
+        network.sendPlayerState(
+            player.xPosition,
+            player.yPosition,
+            otherPlayer.xPosition,
+            otherPlayer.yPosition
+        );
+
         
     }
 
+    if (network.getIsClient() == true && network.getHasReceivedPlayerState() == true)
+    {
+        PlayerStatePacket latestState = network.getLatestPlayerState();
+
+        player.xPosition = latestState.otherPlayerX;
+        player.yPosition = latestState.otherPlayerY;
+
+        otherPlayer.xPosition = latestState.playerX;
+        otherPlayer.yPosition = latestState.playerY;
+    }
 
 
 
@@ -446,7 +463,7 @@ void Game::update(float deltaTime)
     moving = false;
     player.xVelocity = 0;
 
-    if (flag.levelCompleted == false && gameStarted == true)
+    if (flag.levelCompleted == false && gameStarted == true && network.getIsClient() == false)
     {
         if (keys[SDL_SCANCODE_D])
         {
@@ -884,7 +901,7 @@ void Game::render()
         100.0f * scaleHeight
     };
 
-    if (network.getIsServer() == true)
+    if (network.getIsServer() == true || network.getIsClient() == true)
     {
         SDL_FRect rectOtherKnight =
         {

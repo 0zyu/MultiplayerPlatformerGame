@@ -127,6 +127,17 @@ void NetworkManager::pollEvents()
                 latestClientInput.right = inputPacket->right;
                 latestClientInput.jump = inputPacket->jump;
                 latestClientInput.roll = inputPacket->roll;
+                
+            }
+            else if (event.packet->dataLength == sizeof(PlayerStatePacket))
+            {
+                PlayerStatePacket* statePacket = (PlayerStatePacket*)event.packet->data;
+
+                latestPlayerState.playerX = statePacket->playerX;
+                latestPlayerState.playerY = statePacket->playerY;
+                latestPlayerState.otherPlayerX = statePacket->otherPlayerX;
+                latestPlayerState.otherPlayerY = statePacket->otherPlayerY;
+                hasReceivedPlayerState = true;
             }
 
             enet_packet_destroy(event.packet);
@@ -169,9 +180,39 @@ void NetworkManager::sendInput(bool left, bool right, bool jump, bool roll)
     enet_host_flush(host);
 }
 
+void NetworkManager::sendPlayerState(float playerX, float playerY, float otherPlayerX, float otherPlayerY)
+{
+    if (isServer == false)
+    {
+        return;
+    }
+
+    PlayerStatePacket statePacket;
+    statePacket.playerX = playerX;
+    statePacket.playerY = playerY;
+    statePacket.otherPlayerX = otherPlayerX;
+    statePacket.otherPlayerY = otherPlayerY;
+
+    ENetPacket* packet = enet_packet_create(
+        &statePacket,
+        sizeof(PlayerStatePacket),
+        0
+    );
+
+    enet_host_broadcast(host, 0, packet);
+    enet_host_flush(host);
+}
+
+// Getters
+
 PlayerInputPacket NetworkManager::getLatestClientInput()
 {
     return latestClientInput;
+}
+
+PlayerStatePacket NetworkManager::getLatestPlayerState()
+{
+    return latestPlayerState;
 }
 
 bool NetworkManager::getIsServer()
@@ -183,6 +224,12 @@ bool NetworkManager::getIsClient()
 {
     return isClient;
 }
+
+bool NetworkManager::getHasReceivedPlayerState()
+{
+    return hasReceivedPlayerState;
+}
+
 
 void NetworkManager::clean()
 {
