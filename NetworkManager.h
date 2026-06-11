@@ -16,9 +16,11 @@ struct PlayerStatePacket
 {
     float playerX = 0.f;
     float playerY = 0.f;
+    bool playerFacingRight = true;
 
     float otherPlayerX = 0.f;
     float otherPlayerY = 0.f;
+    bool otherPlayerFacingRight = true;
 };
 
 class NetworkManager
@@ -39,7 +41,10 @@ public:
     
 
     
-    void sendPlayerState(float playerX, float playerY, float otherPlayerX, float otherPlayerY);
+    void sendPlayerState(
+        float playerX, float playerY, bool playerFacingRight,
+        float otherPlayerX, float otherPlayerY, bool otherPlayerFacingRight
+    );
     PlayerStatePacket getLatestPlayerState();
 
     bool getIsServer();

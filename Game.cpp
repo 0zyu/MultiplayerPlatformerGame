@@ -74,6 +74,7 @@ bool Game::init()
         { 3275.f, 475.f },
         { 4375.f, 575.f }
     };
+
     otherPlayer.xPosition = 300.f;
     otherPlayer.yPosition = groundY - otherPlayer.height;
 
@@ -389,26 +390,25 @@ void Game::update(float deltaTime)
             otherPlayer.facingRight = false;
         }
 
-        network.sendPlayerState(
-            player.xPosition,
-            player.yPosition,
-            otherPlayer.xPosition,
-            otherPlayer.yPosition
-        );
+       
 
         
     }
 
+  
     if (network.getIsClient() == true && network.getHasReceivedPlayerState() == true)
     {
         PlayerStatePacket latestState = network.getLatestPlayerState();
 
         player.xPosition = latestState.otherPlayerX;
         player.yPosition = latestState.otherPlayerY;
+        player.facingRight = latestState.otherPlayerFacingRight;
 
         otherPlayer.xPosition = latestState.playerX;
         otherPlayer.yPosition = latestState.playerY;
+        otherPlayer.facingRight = latestState.playerFacingRight;
     }
+    
 
 
 
@@ -674,10 +674,23 @@ void Game::update(float deltaTime)
         {
             enemy.xPosition = 1800.f;
             enemy.yPosition = 575.f;
-            enemy.killed = false;
+            enemy.killed = false; 
         }
     }
 
+	//Sends player state to the other player every 33 milliseconds (approx 30 times per second)
+    if (network.getIsServer() == true)
+    {
+        network.sendPlayerState(
+            player.xPosition,
+            player.yPosition,
+            player.facingRight,
+
+            otherPlayer.xPosition,
+            otherPlayer.yPosition,
+            otherPlayer.facingRight
+        );
+    }
 
     //Flag collision code
     if (collisionWithFlag(player.xPosition, player.yPosition,
