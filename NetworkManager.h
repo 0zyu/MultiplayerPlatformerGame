@@ -17,10 +17,12 @@ struct PlayerStatePacket
     float playerX = 0.f;
     float playerY = 0.f;
     bool playerFacingRight = true;
+    bool playerMoving = false;
 
     float otherPlayerX = 0.f;
     float otherPlayerY = 0.f;
     bool otherPlayerFacingRight = true;
+    bool otherPlayerMoving = false;
 };
 
 class NetworkManager
@@ -42,8 +44,8 @@ public:
 
     
     void sendPlayerState(
-        float playerX, float playerY, bool playerFacingRight,
-        float otherPlayerX, float otherPlayerY, bool otherPlayerFacingRight
+        float playerX, float playerY, bool playerFacingRight, bool playerMoving,
+        float otherPlayerX, float otherPlayerY, bool otherPlayerFacingRight, bool otherPlayerMoving
     );
     PlayerStatePacket getLatestPlayerState();
 

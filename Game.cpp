@@ -28,6 +28,10 @@ SDL_Texture* Game::loadTexture(const std::string& filePath)
 bool Game::init()
 {
 	
+
+    lastOtherPlayerFrameTime = SDL_GetTicks();
+
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         return false;
@@ -375,12 +379,14 @@ void Game::update(float deltaTime)
         PlayerInputPacket clientInput = network.getLatestClientInput();
 
         otherPlayer.xVelocity = 0;
+        otherPlayerMoving = false;
 
         if (clientInput.right == true)
         {
             otherPlayer.xVelocity = speed;
             otherPlayer.xPosition += otherPlayer.xVelocity * deltaTime;
             otherPlayer.facingRight = true;
+            otherPlayerMoving = true;
         }
 
         if (clientInput.left == true && otherPlayer.xPosition > 0.f)
@@ -388,11 +394,8 @@ void Game::update(float deltaTime)
             otherPlayer.xVelocity = -speed;
             otherPlayer.xPosition += otherPlayer.xVelocity * deltaTime;
             otherPlayer.facingRight = false;
+            otherPlayerMoving = true;
         }
-
-       
-
-        
     }
 
   
@@ -403,10 +406,12 @@ void Game::update(float deltaTime)
         player.xPosition = latestState.otherPlayerX;
         player.yPosition = latestState.otherPlayerY;
         player.facingRight = latestState.otherPlayerFacingRight;
+        playerMoving = latestState.otherPlayerMoving;
 
         otherPlayer.xPosition = latestState.playerX;
         otherPlayer.yPosition = latestState.playerY;
         otherPlayer.facingRight = latestState.playerFacingRight;
+        otherPlayerMoving = latestState.playerMoving;
     }
     
 
@@ -460,8 +465,12 @@ void Game::update(float deltaTime)
     };
 
     player.rolling = false;
-    moving = false;
-    player.xVelocity = 0;
+
+    if (network.getIsClient() == false)
+    {
+        playerMoving = false;
+        player.xVelocity = 0;
+    }
 
     if (flag.levelCompleted == false && gameStarted == true && network.getIsClient() == false)
     {
@@ -470,7 +479,7 @@ void Game::update(float deltaTime)
             player.xVelocity = speed;
             player.xPosition += player.xVelocity * deltaTime;
             player.facingRight = true;
-            moving = true;
+            playerMoving = true;
         }
 
         if (keys[SDL_SCANCODE_A] && player.xPosition > 0.f)
@@ -478,13 +487,13 @@ void Game::update(float deltaTime)
             player.xVelocity = -speed;
             player.xPosition += player.xVelocity * deltaTime;
             player.facingRight = false;
-            moving = true;
+            playerMoving = true;
         }
 
-        if (keys[SDL_SCANCODE_W] && player.xPosition > 0.f && moving)
+        if (keys[SDL_SCANCODE_W] && player.xPosition > 0.f && playerMoving)
         {
             player.rolling = true;
-            moving = false;
+            playerMoving = false;
             wWasPressed = keys[SDL_SCANCODE_W];
 
             if (player.facingRight)
@@ -522,7 +531,7 @@ void Game::update(float deltaTime)
     }
 
 	//Player animation code
-    if (moving)
+    if (playerMoving)
     {
         Uint64 currentTime = SDL_GetTicks();
 
@@ -536,7 +545,23 @@ void Game::update(float deltaTime)
     {
         player.currentFrame = 1;
     }
+	//other player animation code
+    if (otherPlayerMoving == true)
+    {
+        Uint64 currentTime = SDL_GetTicks();
 
+        if (currentTime - lastOtherPlayerFrameTime >= frameDelay)
+        {
+            otherPlayer.currentFrame = (otherPlayer.currentFrame + 1) % numberOfFramesForKnight;
+            lastOtherPlayerFrameTime = currentTime;
+        }
+    }
+    else
+    {
+        otherPlayer.currentFrame = 1;
+    }
+
+	//Player rolling animation code
     if (player.rolling)
     {
         Uint64 currentTime = SDL_GetTicks();
@@ -685,10 +710,12 @@ void Game::update(float deltaTime)
             player.xPosition,
             player.yPosition,
             player.facingRight,
+            playerMoving,
 
             otherPlayer.xPosition,
             otherPlayer.yPosition,
-            otherPlayer.facingRight
+            otherPlayer.facingRight,
+            otherPlayerMoving
         );
     }
 
@@ -914,6 +941,7 @@ void Game::render()
         100.0f * scaleHeight
     };
 
+    //other player render block
     if (network.getIsServer() == true || network.getIsClient() == true)
     {
         SDL_FRect rectOtherKnight =
@@ -924,13 +952,15 @@ void Game::render()
             100.0f * scaleHeight
         };
 
+        int otherPlayerFrame = otherPlayer.currentFrame;
+
         if (otherPlayer.facingRight == true)
         {
-            SDL_RenderTexture(renderer, runFramesForwards[1], NULL, &rectOtherKnight);
+            SDL_RenderTexture(renderer, runFramesForwards[otherPlayerFrame], NULL, &rectOtherKnight);
         }
         else
         {
-            SDL_RenderTexture(renderer, runFramesBackwards[1], NULL, &rectOtherKnight);
+            SDL_RenderTexture(renderer, runFramesBackwards[otherPlayerFrame], NULL, &rectOtherKnight);
         }
     }
 

@@ -136,10 +136,12 @@ void NetworkManager::pollEvents()
                 latestPlayerState.playerX = statePacket->playerX;
                 latestPlayerState.playerY = statePacket->playerY;
                 latestPlayerState.playerFacingRight = statePacket->playerFacingRight;
+                latestPlayerState.playerMoving = statePacket->playerMoving;
 
                 latestPlayerState.otherPlayerX = statePacket->otherPlayerX;
                 latestPlayerState.otherPlayerY = statePacket->otherPlayerY;
                 latestPlayerState.otherPlayerFacingRight = statePacket->otherPlayerFacingRight;
+                latestPlayerState.otherPlayerMoving = statePacket->otherPlayerMoving;
 
                 hasReceivedPlayerState = true;
             }
@@ -185,8 +187,8 @@ void NetworkManager::sendInput(bool left, bool right, bool jump, bool roll)
 }
 
 void NetworkManager::sendPlayerState(
-    float playerX, float playerY, bool playerFacingRight,
-    float otherPlayerX, float otherPlayerY, bool otherPlayerFacingRight
+    float playerX, float playerY, bool playerFacingRight, bool playerMoving,
+    float otherPlayerX, float otherPlayerY, bool otherPlayerFacingRight, bool otherPlayerMoving
 )
 {
     if (isServer == false)
@@ -195,13 +197,16 @@ void NetworkManager::sendPlayerState(
     }
 
     PlayerStatePacket statePacket;
+
     statePacket.playerX = playerX;
     statePacket.playerY = playerY;
     statePacket.playerFacingRight = playerFacingRight;
+    statePacket.playerMoving = playerMoving;
 
     statePacket.otherPlayerX = otherPlayerX;
     statePacket.otherPlayerY = otherPlayerY;
     statePacket.otherPlayerFacingRight = otherPlayerFacingRight;
+    statePacket.otherPlayerMoving = otherPlayerMoving;
 
     ENetPacket* packet = enet_packet_create(
         &statePacket,

@@ -81,6 +81,10 @@ private:
     Enemy enemy;
     Flag flag;
 
+    bool playerMoving = false;
+    bool otherPlayerMoving = false;
+
+
     vector<Coin> coinsList;
     vector<Platform> platforms;
 
@@ -100,7 +104,8 @@ private:
 
     // General game state
     bool bottomReached = false;
-    bool moving = false;
+    
+    
     bool wWasPressed = false;
     bool spaceWasPressed = false;
 
@@ -120,6 +125,7 @@ private:
     int coinFrameDelay = 100;
     int currentCoinFrame = 0;
     float rollingFrameDelay = 100.f;
+    Uint64 lastOtherPlayerFrameTime = 0;
 
     // Texture/render helpers
     float width = 0.f;
