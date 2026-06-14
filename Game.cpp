@@ -396,6 +396,13 @@ void Game::update(float deltaTime)
             otherPlayer.facingRight = false;
             otherPlayerMoving = true;
         }
+
+        if (clientInput.jump == true && otherPlayer.onGround == true)
+        {
+            otherPlayer.yVelocity = jumpStrength;
+            otherPlayer.onGround = false;
+            otherPlayerBottomReached = false;
+        }
     }
 
   
@@ -617,6 +624,9 @@ void Game::update(float deltaTime)
 
     bottomReached = false;
 
+    
+
+
     for (int i = 0; i < platforms.size(); i++)
     {
         if (collision(player.xPosition, player.yPosition,
@@ -644,6 +654,32 @@ void Game::update(float deltaTime)
     }
 
     player.onGround = bottomReached;
+
+
+    if (network.getIsServer() == true)
+    {
+        if (otherPlayerBottomReached == false)
+        {
+            otherPlayer.yVelocity += gravity * deltaTime;
+            otherPlayer.yPosition += otherPlayer.yVelocity * deltaTime;
+        }
+        else
+        {
+            otherPlayerBottomReached = false;
+        }
+
+        otherPlayerBottomReached = false;
+
+        if (otherPlayer.yPosition + otherPlayer.height >= groundY)
+        {
+            otherPlayer.yPosition = groundY - otherPlayer.height;
+            otherPlayer.yVelocity = 0.0f;
+            otherPlayerBottomReached = true;
+        }
+
+        otherPlayer.onGround = otherPlayerBottomReached;
+    }
+
 
     // Camera follows player
     cameraX = player.xPosition - screenWidth / 2 + player.width / 2;

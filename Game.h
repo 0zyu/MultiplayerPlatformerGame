@@ -104,7 +104,7 @@ private:
 
     // General game state
     bool bottomReached = false;
-    
+    bool otherPlayerBottomReached = false;
     
     bool wWasPressed = false;
     bool spaceWasPressed = false;
